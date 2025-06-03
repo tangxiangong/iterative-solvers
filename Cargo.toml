@@ -1,0 +1,23 @@
+[package]
+name = "iterative-solvers"
+authors = ["Xiangong Tang <tangxiangong@gmail.com>"]
+edition = "2024"
+version = "0.1.0"
+description = "Iterative algorithms for solving linear systems"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/tangxiangong/iterative-solvers"
+readme = "README.md"
+categories = ["mathematics"]
+keywords = ["algorithm", "math"]
+
+[lib]
+name = "iterative_solvers"
+doctest = false
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"
+
+[dependencies]
+nalgebra = "0.33.2"
