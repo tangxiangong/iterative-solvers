@@ -1,11 +1,9 @@
-use na::{DMatrix, DVector};
-use std::iter::Iterator;
+use crate::{IterSolverResult, solver::IterativeSolver};
+use nalgebra::{DMatrix, DVector};
 
-#[allow(dead_code)]
-pub struct CG {
-    mat: DMatrix<f64>,
+pub struct CG<'mat> {
+    mat: &'mat DMatrix<f64>,
     x: DVector<f64>,
-    rhs: DVector<f64>,
     r: DVector<f64>,
     c: DVector<f64>,
     u: DVector<f64>,
@@ -15,8 +13,8 @@ pub struct CG {
     iteration: usize,
 }
 
-impl CG {
-    pub fn new(mat: DMatrix<f64>, rhs: DVector<f64>, tol: f64) -> Self {
+impl<'mat> CG<'mat> {
+    pub fn new(mat: &'mat DMatrix<f64>, rhs: &'mat DVector<f64>, tol: f64) -> Self {
         let n = mat.nrows();
         let x = DVector::zeros(n);
         let r = rhs.clone();
@@ -29,7 +27,6 @@ impl CG {
         Self {
             mat,
             x,
-            rhs,
             r,
             c,
             u,
@@ -41,14 +38,14 @@ impl CG {
     }
 
     pub fn new_with_initial_guess(
-        mat: DMatrix<f64>,
-        rhs: DVector<f64>,
+        mat: &'mat DMatrix<f64>,
+        rhs: &'mat DVector<f64>,
         tol: f64,
         initial_guess: DVector<f64>,
     ) -> Self {
         let n = mat.nrows();
         let x = initial_guess;
-        let r = &rhs - &mat * &x;
+        let r = rhs - mat * &x;
         let c = DVector::zeros(n);
         let u = DVector::zeros(n);
         let residual = r.norm();
@@ -58,7 +55,6 @@ impl CG {
         Self {
             mat,
             x,
-            rhs,
             r,
             c,
             u,
@@ -112,7 +108,7 @@ impl CG {
     }
 }
 
-impl Iterator for CG {
+impl<'mat> Iterator for CG<'mat> {
     type Item = f64;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -120,11 +116,20 @@ impl Iterator for CG {
     }
 }
 
-pub fn cg(mat: DMatrix<f64>, rhs: DVector<f64>, tol: f64) -> DVector<f64> {
+pub fn cg<'mat>(mat: &'mat DMatrix<f64>, rhs: &'mat DVector<f64>, tol: f64) -> DVector<f64> {
     let mut iter = CG::new(mat, rhs, tol);
-    let r: Vec<_> = iter.by_ref().collect();
-    println!("{r:?}");
+    let _: Vec<_> = iter.by_ref().collect();
     iter.x
+}
+
+impl<'mat> IterativeSolver<'mat> for CG<'mat> {
+    fn solve(
+        &self,
+        mat: &'mat DMatrix<f64>,
+        rhs: &'mat DVector<f64>,
+    ) -> IterSolverResult<DVector<f64>> {
+        Ok(cg(mat, rhs, self.tol))
+    }
 }
 
 #[cfg(test)]
@@ -147,7 +152,7 @@ mod tests {
         let solution: Vec<_> = (1..n).map(|i| (i as f64 * h * PI).sin()).collect();
         let solution = DVector::from_vec(solution);
         let rhs = DVector::from_vec(rhs);
-        let x = cg(mat, rhs, 1e-10);
+        let x = cg(&mat, &rhs, 1e-10);
         let e = (solution - x).norm();
         println!("error: {}", e);
     }
