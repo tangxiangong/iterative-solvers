@@ -1,4 +1,4 @@
-use na::{DMatrix, DVector};
+use nalgebra::{DMatrix, DVector};
 
 pub fn diag(data: &[f64], offset: i32) -> DMatrix<f64> {
     if data.is_empty() {
