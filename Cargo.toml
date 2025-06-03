@@ -21,6 +21,7 @@ panic = "abort"
 
 [dependencies]
 nalgebra = "0.33"
+thiserror = "2.0.12"
 
 [dev-dependencies]
 criterion = "0.6.0"
