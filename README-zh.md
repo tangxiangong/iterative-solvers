@@ -4,6 +4,12 @@
 
 本库提供了数值线性代数中迭代算法的 Rust 实现，深受 Julia 包 [IterativeSolvers.jl](https://github.com/JuliaLinearAlgebra/IterativeSolvers.jl) 的启发。
 
+[![文档](https://img.shields.io/badge/文档-最新-blue.svg)](https://docs.rs/iterative-solvers/latest/iterative_solvers/)
+[![crates.io](https://img.shields.io/crates/v/iterative-solvers.svg)](https://crates.io/crates/iterative-solvers)
+[![许可证: MIT/Apache-2.0](https://img.shields.io/badge/许可证-MIT%2FApache--2.0-blue.svg)](LICENSE-MIT)
+
+
+
 ## 迭代算法
 
 - [x] 共轭梯度法 (CG)

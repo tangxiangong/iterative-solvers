@@ -4,6 +4,11 @@ English | [简体中文](README-zh.md)
 
 This library provides Rust implementations of iterative algorithms for solving linear system, drawing heavy inspiration from the Julia package [IterativeSolvers.jl](https://github.com/JuliaLinearAlgebra/IterativeSolvers.jl).
 
+[![docs.rs](https://img.shields.io/badge/docs.rs-latest-blue.svg)](https://docs.rs/iterative-solvers/latest/iterative_solvers/)
+[![crates.io](https://img.shields.io/crates/v/iterative-solvers.svg)](https://crates.io/crates/iterative-solvers)
+[![License: MIT/Apache-2.0](https://img.shields.io/badge/License-MIT%2FApache--2.0-blue.svg)](LICENSE-MIT)
+
+
 ## Iterative Algorithms
 
 - [x] Conjugate Gradient (CG)
