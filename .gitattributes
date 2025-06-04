@@ -1,1 +1,4 @@
+# Exclude Julia benchmark code from language statistics
 julia-bench/* linguist-detectable=false
+julia-bench/* linguist-vendored=true
+*.jl linguist-detectable=false
