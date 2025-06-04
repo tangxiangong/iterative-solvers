@@ -15,11 +15,10 @@ fn main() {
     let solution: Vec<_> = (1..n).map(|i| (i as f64 * h * PI).sin()).collect();
     let solution = DVector::from_vec(solution);
     let rhs = DVector::from_vec(rhs);
-    let mut solver = CG::new(&mat, &rhs, 1e-10).unwrap();
-    for residual in &mut solver {
-        println!("residual: {}", residual);
+    let mut solver = CG::new(&mat, &rhs, 1e-10, 1e-8).unwrap();
+    while let Some(_) = solver.next() {
+        println!("solution: {:#?}", solver.solution());
     }
-    let result = solver.result();
-    let e = (solution - result.solution()).norm();
+    let e = (solution - solver.solution()).norm();
     println!("error: {}", e);
 }
