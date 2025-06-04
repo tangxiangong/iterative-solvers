@@ -71,22 +71,26 @@ fn main() {
     let solution = DVector::from_vec(solution);
     let rhs = DVector::from_vec(rhs);
     // 求解线性系统
-    let state = cg(&mat, &rhs, 1e-10).unwrap();
+    let abstol = 1e-10;
+    let reltol = 1e-8;
+    let result = cg(&mat, &rhs, abstol, reltol).unwrap();
     // 计算误差
-    let e = (solution - state.solution()).norm();
+    let e = (solution - result.solution()).norm();
     println!("error: {}", e);
 }
 ```
 
-如果您想知道每次迭代的残差，迭代器将为您提供帮助。
+如果您想知道每次迭代的残差和近似解，迭代器将为您提供帮助。
 
 ```rust
-let mut solver = CG::new(&mat, &rhs, 1e-10).unwrap();
-for residual in &mut solver {
-    println!("residual: {}", residual);
+let abstol = 1e-10;
+let reltol = 1e-8;
+let mut solver = CG::new(&mat, &rhs, abstol, reltol).unwrap();
+while let Some(residual) = solver.next() {
+    println!("residual: {residual}");
+    println!("solution: {:#?}", solver.solution());
 }
-let result = solver.result();
-let e = (solution - result.solution()).norm();
+let e = (solution - solver.solution()).norm();
 println!("error: {}", e);
 ```
 

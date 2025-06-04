@@ -69,22 +69,26 @@ fn main() {
     let solution = DVector::from_vec(solution);
     let rhs = DVector::from_vec(rhs);
     // solve the linear system
-    let state = cg(&mat, &rhs, 1e-10).unwrap();
+    let abstol = 1e-10;
+    let reltol = 1e-8;
+    let result = cg(&mat, &rhs, abstol, reltol).unwrap();
     // compute the error
-    let e = (solution - state.solution()).norm();
+    let e = (solution - result.solution()).norm();
     println!("error: {}", e);
 }
 ```
 
-If you want to know the residual at each iteration, the iterator will help you.
+If you want to know the residual and the approximate solution at each iteration, the iterator will help you.
 
 ```rust
-let mut solver = CG::new(&mat, &rhs, 1e-10).unwrap();
-for residual in &mut solver {
-    println!("residual: {}", residual);
+let abstol = 1e-10;
+let reltol = 1e-8;
+let mut solver = CG::new(&mat, &rhs, abstol, reltol).unwrap();
+while let Some(residual) = solver.next() {
+    println!("residual: {residual}");
+    println!("solution: {:#?}", solver.solution());
 }
-let result = solver.result();
-let e = (solution - result.solution()).norm();
+let e = (solution - solver.solution()).norm();
 println!("error: {}", e);
 ```
 
