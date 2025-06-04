@@ -1,5 +1,5 @@
 use criterion::{Criterion, criterion_group, criterion_main};
-use iterative_solvers::utils::diag;
+use iterative_solvers::utils::diagm;
 use std::hint::black_box;
 
 fn criterion_benchmark(c: &mut Criterion) {
@@ -15,9 +15,9 @@ fn criterion_benchmark(c: &mut Criterion) {
 
         group.bench_function("diag", |b| {
             b.iter(|| {
-                diag(black_box(&diagonal), black_box(0));
-                diag(black_box(&sub_diagonal), black_box(1));
-                diag(black_box(&sub_diagonal), black_box(-1));
+                diagm(black_box(&diagonal), black_box(0));
+                diagm(black_box(&sub_diagonal), black_box(1));
+                diagm(black_box(&sub_diagonal), black_box(-1));
             })
         });
 
@@ -29,7 +29,7 @@ fn criterion_benchmark(c: &mut Criterion) {
     let mut group = c.benchmark_group("diagonal_only");
 
     group.bench_function("diag_diagonal", |b| {
-        b.iter(|| diag(black_box(&large_data), black_box(0)))
+        b.iter(|| diagm(black_box(&large_data), black_box(0)))
     });
 
     group.finish();
