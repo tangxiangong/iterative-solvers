@@ -24,7 +24,7 @@ fn criterion_benchmark(c: &mut Criterion) {
                 black_box(reltol),
             )
             .unwrap();
-            let _ = solver.collect::<Vec<_>>();
+            let _ = solver.solve();
         })
     });
 }

@@ -36,7 +36,7 @@ use nalgebra::{DMatrix, DVector};
 /// let reltol = 1e-8;
 ///
 /// let mut cg = CG::new(&mat, &rhs, abstol, reltol).unwrap();
-/// let solution = cg.result();
+/// let solution = cg.solve();
 /// ```
 #[derive(Debug, Clone)]
 pub struct CG<'mat> {
@@ -81,7 +81,7 @@ impl<'mat> CG<'mat> {
     /// let reltol = 1e-8;
     ///
     /// let mut cg = CG::new(&mat, &rhs, abstol, reltol).unwrap();
-    /// let solution = cg.result();
+    /// let solution = cg.solve();
     /// ```
     pub fn new(
         mat: &'mat DMatrix<f64>,
@@ -160,7 +160,7 @@ impl<'mat> CG<'mat> {
     /// let initial_guess = DVector::from_vec(vec![0.0, 0.0]);
     ///
     /// let mut cg = CG::new_with_initial_guess(&mat, &rhs, initial_guess, abstol, reltol).unwrap();
-    /// let solution = cg.result();
+    /// let solution = cg.solve();
     /// ```
     pub fn new_with_initial_guess(
         mat: &'mat DMatrix<f64>,
@@ -230,8 +230,8 @@ impl<'mat> CG<'mat> {
         self.solution.len()
     }
 
-    /// Consume the solver and return the result.
-    pub fn result(mut self) -> Self {
+    /// Consume the solver and return the solved result.
+    pub fn solve(mut self) -> Self {
         self.by_ref().count();
         self
     }
