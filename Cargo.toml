@@ -2,14 +2,14 @@
 name = "iterative-solvers"
 authors = ["Xiangong Tang <tangxiangong@gmail.com>"]
 edition = "2024"
-version = "0.1.0"
+version = "0.2.0"
 description = "Iterative algorithms for solving linear systems"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/tangxiangong/iterative-solvers"
 readme = "README.md"
 categories = ["mathematics"]
-keywords = ["numerical-algorithm", "math"]
-exclude = ["julia-bench", "benches", "examples"]
+keywords = ["numerical-algorithm", "math", "cg"]
+exclude = ["julia-bench"]
 
 [lib]
 name = "iterative_solvers"
@@ -23,7 +23,7 @@ panic = "abort"
 [features]
 default = ["nalgebra"]
 nalgebra = ["dep:nalgebra", "dep:nalgebra-sparse"]
-faer = ["dep:faer"]
+# faer = ["dep:faer"]
 
 [dependencies]
 thiserror = "2.0.12"
@@ -31,7 +31,9 @@ thiserror = "2.0.12"
 # nalgebra backend, default
 nalgebra = { version = "0.33", optional = true }
 nalgebra-sparse = { version = "0.10.0", optional = true }
-faer = { version = "0.22.6", optional = true }
+
+# # faer backend
+# faer = { version = "0.22.6", optional = true }
 
 [dev-dependencies]
 criterion = "0.6.0"
