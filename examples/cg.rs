@@ -1,14 +1,13 @@
-use std::f64::consts::PI;
-
-use iterative_solvers::{CG, utils::symmetric_tridiagonal};
+use iterative_solvers::{CG, utils::sparse::symmetric_tridiagonal_csc};
 use nalgebra::DVector;
+use std::f64::consts::PI;
 
 fn main() {
     let n = 1024;
     let h = 1.0 / 1024.0;
     let a = vec![2.0 / (h * h); n - 1];
     let b = vec![-1.0 / (h * h); n - 2];
-    let mat = symmetric_tridiagonal(&a, &b).unwrap();
+    let mat = symmetric_tridiagonal_csc(&a, &b).unwrap();
     let rhs: Vec<_> = (1..n)
         .map(|i| PI * PI * (i as f64 * h * PI).sin())
         .collect();
