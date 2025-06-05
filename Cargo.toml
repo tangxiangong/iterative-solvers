@@ -39,7 +39,7 @@ nalgebra-sparse = { version = "0.10.0", optional = true }
 criterion = "0.6.0"
 
 [[bench]]
-name = "diag_bench"
+name = "diagm"
 harness = false
 
 [[bench]]
