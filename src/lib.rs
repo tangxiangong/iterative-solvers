@@ -1,12 +1,16 @@
 #![doc = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/README.md"))]
 
-pub mod cg;
-pub use cg::*;
-
-pub mod utils;
-
 pub mod error;
 pub use error::*;
 
-mod solver;
-pub use solver::*;
+#[cfg(feature = "nalgebra")]
+mod nalgebra;
+
+// #[cfg(feature = "faer")]
+// mod faer;
+
+#[cfg(feature = "nalgebra")]
+pub use nalgebra::*;
+
+// #[cfg(feature = "faer")]
+// pub use faer::*;

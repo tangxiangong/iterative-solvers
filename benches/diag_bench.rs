@@ -1,5 +1,5 @@
 use criterion::{Criterion, criterion_group, criterion_main};
-use iterative_solvers::utils::diagm;
+use iterative_solvers::utils::dense::diagm;
 use std::hint::black_box;
 
 fn criterion_benchmark(c: &mut Criterion) {

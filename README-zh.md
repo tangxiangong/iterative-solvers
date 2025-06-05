@@ -4,9 +4,28 @@
 
 本库提供了数值线性代数中迭代算法的 Rust 实现，深受 Julia 包 [IterativeSolvers.jl](https://github.com/JuliaLinearAlgebra/IterativeSolvers.jl) 的启发。
 
+[![文档](https://img.shields.io/badge/文档-最新-blue.svg)](https://docs.rs/iterative-solvers/latest/iterative_solvers/)
+[![crates.io](https://img.shields.io/crates/v/iterative-solvers.svg)](https://crates.io/crates/iterative-solvers)
+[![许可证: MIT/Apache-2.0](https://img.shields.io/badge/许可证-MIT%2FApache--2.0-blue.svg)](LICENSE-MIT)
+
+
+
 ## 迭代算法
 
 - [x] 共轭梯度法 (CG)
+
+## 支持的后端线性代数库
+
+- [x] [nalgebra](https://github.com/dimforge/nalgebra) (默认)
+- [ ] [faer](https://github.com/sarah-quinones/faer-rs)
+
+您可以使用 Cargo 特性选择您喜欢的后端：
+
+```toml
+[dependencies]
+iterative-solvers = { version = "0.1", default-features = false, features = ["faer"] }
+```
+
 
 ## 使用方法
 
@@ -45,42 +64,45 @@ u_0 = 0, \quad u_N = 0.
 我们可以使用共轭梯度法（CG）求解该线性系统。
 
 ```rust
-use iterative_solvers::{cg, utils::symmetric_tridiagonal};
-use nalgebra::{DMatrix, DVector};
+use iterative_solvers::{cg, CG, utils::sparse::symmetric_tridiagonal_csc};
+use nalgebra::DVector;
+use std::f64::consts::PI;
 
 fn main() {
-    let N = 1024;
+    let n = 1024;
     let h = 1.0 / 1024.0;
-    let a = vec![2.0 / (h * h); N - 1];
-    let b = vec![-1.0 / (h * h); N - 2];
-    // 创建对称三对角矩阵
-    let mat = symmetric_tridiagonal(&a, &b).unwrap();
-    // 创建右端向量
-    let rhs: Vec<_> = (1..N)
+    let a = vec![2.0 / (h * h); n - 1];
+    let b = vec![-1.0 / (h * h); n - 2];
+    // 使用 CSC 格式存储对称三对角矩阵
+    let mat = symmetric_tridiagonal_csc(&a, &b).unwrap();
+    // 生成右端向量
+    let rhs: Vec<_> = (1..n)
         .map(|i| PI * PI * (i as f64 * h * PI).sin())
         .collect();
-    // 创建精确解
-    let solution: Vec<_> = (1..N)
-        .map(|i| (i as f64 * h * PI).sin()).collect();
+    // 生成精确解
+    let solution: Vec<_> = (1..n).map(|i| (i as f64 * h * PI).sin()).collect();
     let solution = DVector::from_vec(solution);
     let rhs = DVector::from_vec(rhs);
-    // 求解线性系统
-    let state = cg(&mat, &rhs, 1e-10).unwrap();
+    // 使用共轭梯度法求解
+    let result = cg(&mat, &rhs, 1e-10, 1e-8).unwrap();
     // 计算误差
-    let e = (solution - state.solution()).norm();
+    let e = (solution - result.solution()).norm();
     println!("error: {}", e);
 }
 ```
 
-如果您想知道每次迭代的残差，迭代器将为您提供帮助。
+如果您想知道每次迭代的残差、近似解和共轭方向，迭代器将为您提供帮助。
 
 ```rust
-let mut solver = CG::new(&mat, &rhs, 1e-10).unwrap();
-for residual in &mut solver {
-    println!("residual: {}", residual);
+let abstol = 1e-10;
+let reltol = 1e-8;
+let mut solver = CG::new(&mat, &rhs, abstol, reltol).unwrap();
+while let Some(residual) = solver.next() {
+    println!("residual: {residual}");
+    println!("solution: {:#?}", solver.solution());
+    println!("conjugate direction: {:#?}", solver.conjugate_direction());
 }
-let result = solver.result();
-let e = (solution - result.solution()).norm();
+let e = (solution - solver.solution()).norm();
 println!("error: {}", e);
 ```
 

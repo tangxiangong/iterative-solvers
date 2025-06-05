@@ -2,6 +2,48 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.0] - 2025-06-05
+
+### 🚀 Features
+
+- Added tool functions for adding sparse matrices
+- Implement support for matrix operations and sparse matrices
+- Support for conjugate gradient (CG) methods that support general matrix operations
+- Added operation module and exported
+
+### 💼 Other
+
+- Add Julia benchmark for conjugate gradient solver
+- Add benchmark for conjugate gradient solver
+- Updates import paths for dense matrix utilities
+
+### 🚜 Refactor
+
+- Refact CG solver to simplify state management and improve tolerance handling
+- Remove solver module and its exports
+- Rename result() to solve() for clarity
+- Remove solver module and related traits
+- Restructure code into feature-based modules
+- Update the import path of the sparse matrix tool
+
+### 📚 Documentation
+
+- Update the README file, add document links, version badges, and license information
+- Update CG solver examples with tolerance parameters and iteration output
+- Update the README file to add information about supported backend linear algebra libraries
+- Add documentation comments
+- Updated the README file, modified the sample code to store symmetric tridiagonal matrices in CSC format, and added output information about the conjugate direction. Adjusted variable naming to improve readability.
+
+### ⚙️ Miscellaneous Tasks
+
+- Update to version 0.1.0
+- Exclude julia-bench from language detection
+- Update package metadata and benchmarks configuration
+- Add optional features and dependency configurations
+- Update
+- Comment out the import and usage of the faer module
+- Update the version number to 0.2.0, add the keyword "cg", and comment out the dependency of the faer module.
+
 ## [0.1.0] - 2025-06-04
 
 ### 🚀 Features
