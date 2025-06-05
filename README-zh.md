@@ -14,6 +14,19 @@
 
 - [x] 共轭梯度法 (CG)
 
+## 支持的后端线性代数库
+
+- [x] [nalgebra](https://github.com/dimforge/nalgebra) (默认)
+- [ ] [faer](https://github.com/sarah-quinones/faer-rs)
+
+您可以使用 Cargo 特性选择您喜欢的后端：
+
+```toml
+[dependencies]
+iterative-solvers = { version = "0.1", default-features = false, features = ["faer"] }
+```
+
+
 ## 使用方法
 
 考虑以下微分方程：
