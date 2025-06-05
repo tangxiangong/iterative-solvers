@@ -1,8 +1,7 @@
-//! Utility functions for creating matrices and vectors.
-
-use nalgebra::{DMatrix, DVector};
+//! Utility functions for creating dense matrices.
 
 use crate::{IterSolverError, IterSolverResult};
+use nalgebra::{DMatrix, DVector};
 
 /// Creates a diagonal matrix with the given data placed on a specified diagonal.
 ///
@@ -15,19 +14,13 @@ use crate::{IterSolverError, IterSolverResult};
 /// * `data` - A slice of f64 values to be placed on the diagonal
 /// * `offset` - The diagonal offset:
 ///   - `0`: Main diagonal
-///   - Positive: Above the main diagonal (super-diagonal)
-///   - Negative: Below the main diagonal (sub-diagonal)
-///
-/// # Returns
-///
-/// A `DMatrix<f64>` containing the diagonal matrix. If `data` is empty, returns
-/// a 0×0 matrix.
+///   - Positive: above the main diagonal (upper-diagonal)
+///   - Negative: below the main diagonal (lower-diagonal)
 ///
 /// # Examples
 ///
 /// ```rust
-/// use nalgebra::DMatrix;
-/// use iterative_solvers::utils::diagm;
+/// use iterative_solvers::utils::dense::diagm;
 ///
 /// // Main diagonal
 /// let data = vec![1.0, 2.0, 3.0];
@@ -37,7 +30,7 @@ use crate::{IterSolverError, IterSolverResult};
 /// // [0.0, 2.0, 0.0]
 /// // [0.0, 0.0, 3.0]
 ///
-/// // Super-diagonal (offset = 1)
+/// // Upper-diagonal (offset = 1)
 /// let mat = diagm(&data, 1);
 /// // Creates:
 /// // [0.0, 1.0, 0.0, 0.0]
@@ -58,13 +51,13 @@ pub fn diagm(data: &[f64], offset: i32) -> DMatrix<f64> {
 
             unsafe {
                 if offset > 0 {
-                    for (idx, &val) in data.iter().enumerate() {
-                        *mat.get_unchecked_mut((idx, idx + offset_usize)) = val;
-                    }
+                    data.iter().enumerate().for_each(|(idx, &val)| {
+                        *mat.get_unchecked_mut((idx, idx + offset_usize)) = val
+                    });
                 } else {
-                    for (idx, &val) in data.iter().enumerate() {
-                        *mat.get_unchecked_mut((idx + offset_usize, idx)) = val;
-                    }
+                    data.iter().enumerate().for_each(|(idx, &val)| {
+                        *mat.get_unchecked_mut((idx + offset_usize, idx)) = val
+                    });
                 }
             }
             mat
@@ -76,19 +69,14 @@ pub fn diagm(data: &[f64], offset: i32) -> DMatrix<f64> {
 ///
 /// This function constructs a tridiagonal matrix where:
 /// - The main diagonal contains elements from the `diagonal` vector
-/// - The sub-diagonal (below main) contains elements from the `lower` vector
-/// - The super-diagonal (above main) contains elements from the `upper` vector
+/// - The lower-diagonal (below main) contains elements from the `lower` vector
+/// - The upper-diagonal (above main) contains elements from the `upper` vector
 ///
 /// # Arguments
 ///
 /// * `diagonal` - A slice containing the main diagonal elements
-/// * `lower` - A slice containing the lower diagonal elements (sub-diagonal)
-/// * `upper` - A slice containing the upper diagonal elements (super-diagonal)
-///
-/// # Returns
-///
-/// * `Ok(DMatrix<f64>)` - The resulting tridiagonal matrix
-/// * `Err(IterSolverError::DimensionError)` - If the vector dimensions don't match the required pattern
+/// * `lower` - A slice containing the lower diagonal elements (lower-diagonal)
+/// * `upper` - A slice containing the upper diagonal elements (upper-diagonal)
 ///
 /// # Dimension Requirements
 ///
@@ -98,13 +86,13 @@ pub fn diagm(data: &[f64], offset: i32) -> DMatrix<f64> {
 ///
 /// This is because an n×n tridiagonal matrix has:
 /// - n diagonal elements
-/// - (n-1) sub-diagonal elements
-/// - (n-1) super-diagonal elements
+/// - (n-1) lower-diagonal elements
+/// - (n-1) upper-diagonal elements
 ///
 /// # Examples
 ///
 /// ```rust
-/// use iterative_solvers::utils::tridiagonal;
+/// use iterative_solvers::utils::dense::tridiagonal;
 ///
 /// let diagonal = vec![2.0, 3.0, 4.0];
 /// let lower = vec![1.0, 1.0];
@@ -138,20 +126,15 @@ pub fn tridiagonal(
 
 /// Creates a symmetric tridiagonal matrix from diagonal and sub-diagonal vectors.
 ///
-/// This function constructs a symmetric tridiagonal matrix where the sub-diagonal
-/// and super-diagonal elements are identical. This is a common structure in numerical
+/// This function constructs a symmetric tridiagonal matrix where the lower-diagonal
+/// and upper-diagonal elements are identical. This is a common structure in numerical
 /// methods, particularly for solving differential equations and eigenvalue problems.
 ///
 /// # Arguments
 ///
 /// * `diagonal` - A slice containing the main diagonal elements
-/// * `sub_diagonal` - A slice containing the sub-diagonal elements, which will be
-///   mirrored to create the super-diagonal
-///
-/// # Returns
-///
-/// * `Ok(DMatrix<f64>)` - The resulting symmetric tridiagonal matrix
-/// * `Err(IterSolverError::DimensionError)` - If the vector dimensions don't match the required pattern
+/// * `sub_diagonal` - A slice containing the lower-diagonal elements, which will be
+///   mirrored to create the upper-diagonal
 ///
 /// # Dimension Requirements
 ///
@@ -161,7 +144,7 @@ pub fn tridiagonal(
 /// # Examples
 ///
 /// ```rust
-/// use iterative_solvers::utils::symmetric_tridiagonal;
+/// use iterative_solvers::utils::dense::symmetric_tridiagonal;
 ///
 /// let diagonal = vec![2.0, 3.0, 4.0];
 /// let sub_diagonal = vec![1.0, 1.5];
