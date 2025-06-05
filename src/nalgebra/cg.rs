@@ -1,7 +1,10 @@
 //! Conjugate Gradient (CG) method.
 
+use std::ops::Mul;
+
+use super::MatrixOp;
 use crate::{IterSolverError, IterSolverResult};
-use nalgebra::{DMatrix, DVector};
+use nalgebra::DVector;
 
 /// Conjugate Gradient (CG) method for solving linear systems Ax = b.
 ///
@@ -39,8 +42,8 @@ use nalgebra::{DMatrix, DVector};
 /// let solution = cg.solve();
 /// ```
 #[derive(Debug, Clone)]
-pub struct CG<'mat> {
-    mat: &'mat DMatrix<f64>,
+pub struct CG<'mat, Mat: MatrixOp> {
+    mat: &'mat Mat,
     solution: DVector<f64>,
     residual: f64,
     iteration: usize,
@@ -51,7 +54,7 @@ pub struct CG<'mat> {
     prev_residual: f64,
 }
 
-impl<'mat> CG<'mat> {
+impl<'mat, Mat: MatrixOp> CG<'mat, Mat> {
     /// Create a new `CG` solver with the given matrix, right-hand side, and tolerance.
     ///
     /// # Arguments
@@ -84,7 +87,7 @@ impl<'mat> CG<'mat> {
     /// let solution = cg.solve();
     /// ```
     pub fn new(
-        mat: &'mat DMatrix<f64>,
+        mat: &'mat Mat,
         rhs: &'mat DVector<f64>,
         abstol: f64,
         reltol: f64,
@@ -163,12 +166,15 @@ impl<'mat> CG<'mat> {
     /// let solution = cg.solve();
     /// ```
     pub fn new_with_initial_guess(
-        mat: &'mat DMatrix<f64>,
+        mat: &'mat Mat,
         rhs: &'mat DVector<f64>,
         initial_guess: DVector<f64>,
         abstol: f64,
         reltol: f64,
-    ) -> IterSolverResult<Self> {
+    ) -> IterSolverResult<Self>
+    where
+        &'mat Mat: Mul<DVector<f64>, Output = DVector<f64>>,
+    {
         if !mat.is_square() {
             return Err(IterSolverError::DimensionError(format!(
                 "The matrix is not square, whose shape is ({}, {})",
@@ -191,8 +197,7 @@ impl<'mat> CG<'mat> {
             )));
         }
         let n = mat.nrows();
-        let x = initial_guess;
-        let r = rhs - mat * &x;
+        let r = rhs - mat * initial_guess.clone();
         let c = DVector::zeros(n);
         let u = DVector::zeros(n);
         let residual = r.norm();
@@ -201,7 +206,7 @@ impl<'mat> CG<'mat> {
         let tol = abstol.max(reltol * residual);
         Ok(Self {
             mat,
-            solution: x,
+            solution: initial_guess,
             residual,
             iteration,
             r,
@@ -252,7 +257,7 @@ impl<'mat> CG<'mat> {
     }
 
     /// Get the matrix.
-    pub fn mat(&self) -> &DMatrix<f64> {
+    pub fn mat(&self) -> &Mat {
         self.mat
     }
 
@@ -267,7 +272,7 @@ impl<'mat> CG<'mat> {
     }
 }
 
-impl<'mat> Iterator for CG<'mat> {
+impl<'mat, Mat: MatrixOp> Iterator for CG<'mat, Mat> {
     type Item = f64;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -280,7 +285,7 @@ impl<'mat> Iterator for CG<'mat> {
         self.u.axpy(1.0, &self.r, beta);
 
         // c = A * u
-        self.mat.mul_to(&self.u, &mut self.c);
+        self.mat.gemv(1.0, &self.u, 0.0, &mut self.c);
 
         // update solution and residual
         // x = x + alpha * u
@@ -328,12 +333,12 @@ impl<'mat> Iterator for CG<'mat> {
 ///
 /// let solution = cg(&mat, &rhs, abstol, reltol).unwrap();
 /// ```
-pub fn cg<'mat>(
-    mat: &'mat DMatrix<f64>,
+pub fn cg<'mat, Mat: MatrixOp>(
+    mat: &'mat Mat,
     rhs: &'mat DVector<f64>,
     abstol: f64,
     reltol: f64,
-) -> IterSolverResult<CG<'mat>> {
+) -> IterSolverResult<CG<'mat, Mat>> {
     let mut solver = CG::new(mat, rhs, abstol, reltol)?;
     solver.by_ref().count();
     Ok(solver)
@@ -375,13 +380,16 @@ pub fn cg<'mat>(
 ///
 /// let solution = cg_with_initial_guess(&mat, &rhs, initial_guess, abstol, reltol).unwrap();
 /// ```
-pub fn cg_with_initial_guess<'mat>(
-    mat: &'mat DMatrix<f64>,
+pub fn cg_with_initial_guess<'mat, Mat: MatrixOp>(
+    mat: &'mat Mat,
     rhs: &'mat DVector<f64>,
     initial_guess: DVector<f64>,
     abstol: f64,
     reltol: f64,
-) -> IterSolverResult<CG<'mat>> {
+) -> IterSolverResult<CG<'mat, Mat>>
+where
+    &'mat Mat: Mul<DVector<f64>, Output = DVector<f64>>,
+{
     let mut solver = CG::new_with_initial_guess(mat, rhs, initial_guess, abstol, reltol)?;
     solver.by_ref().count();
     Ok(solver)
@@ -392,15 +400,33 @@ mod tests {
     use std::f64::consts::PI;
 
     use super::*;
-    use crate::utils::symmetric_tridiagonal;
+    use crate::utils::{dense::symmetric_tridiagonal, sparse::symmetric_tridiagonal_csc};
 
     #[test]
-    fn test_cg() {
+    fn test_cg_dense() {
         let n = 1024;
         let h = 1.0 / 1024.0;
         let a = vec![2.0 / (h * h); n - 1];
         let b = vec![-1.0 / (h * h); n - 2];
         let mat = symmetric_tridiagonal(&a, &b).unwrap();
+        let rhs: Vec<_> = (1..n)
+            .map(|i| PI * PI * (i as f64 * h * PI).sin())
+            .collect();
+        let solution: Vec<_> = (1..n).map(|i| (i as f64 * h * PI).sin()).collect();
+        let solution = DVector::from_vec(solution);
+        let rhs = DVector::from_vec(rhs);
+        let solver = cg(&mat, &rhs, 1e-10, 1e-8).unwrap();
+        let e = (solution - solver.solution()).norm();
+        assert!(e < 1e-4);
+    }
+
+    #[test]
+    fn test_cg_sparse() {
+        let n = 1024;
+        let h = 1.0 / 1024.0;
+        let a = vec![2.0 / (h * h); n - 1];
+        let b = vec![-1.0 / (h * h); n - 2];
+        let mat = symmetric_tridiagonal_csc(&a, &b).unwrap();
         let rhs: Vec<_> = (1..n)
             .map(|i| PI * PI * (i as f64 * h * PI).sin())
             .collect();
