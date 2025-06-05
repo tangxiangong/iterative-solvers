@@ -61,36 +61,34 @@ The coefficient matrix of this linear system is a symmetric tridiagonal matrix, 
 We can solve this linear system using the Conjugate Gradient (CG) method.
 
 ```rust
-use iterative_solvers::{cg, utils::symmetric_tridiagonal};
-use nalgebra::{DMatrix, DVector};
+use iterative_solvers::{cg, CG, utils::sparse::symmetric_tridiagonal_csc};
+use nalgebra::DVector;
+use std::f64::consts::PI;
 
 fn main() {
-    let N = 1024;
+    let n = 1024;
     let h = 1.0 / 1024.0;
-    let a = vec![2.0 / (h * h); N - 1];
-    let b = vec![-1.0 / (h * h); N - 2];
-    // create a symmetric tridiagonal matrix
-    let mat = symmetric_tridiagonal(&a, &b).unwrap();
-    // create the right-hand side vector
-    let rhs: Vec<_> = (1..N)
+    let a = vec![2.0 / (h * h); n - 1];
+    let b = vec![-1.0 / (h * h); n - 2];
+    // Store the symmetric tridiagonal matrix in CSC format
+    let mat = symmetric_tridiagonal_csc(&a, &b).unwrap();
+    // Generate the right-hand side vector
+    let rhs: Vec<_> = (1..n)
         .map(|i| PI * PI * (i as f64 * h * PI).sin())
         .collect();
-    // create the exact solution
-    let solution: Vec<_> = (1..N)
-        .map(|i| (i as f64 * h * PI).sin()).collect();
+    // Generate the exact solution
+    let solution: Vec<_> = (1..n).map(|i| (i as f64 * h * PI).sin()).collect();
     let solution = DVector::from_vec(solution);
     let rhs = DVector::from_vec(rhs);
-    // solve the linear system
-    let abstol = 1e-10;
-    let reltol = 1e-8;
-    let result = cg(&mat, &rhs, abstol, reltol).unwrap();
-    // compute the error
+    // Solve the linear system using the CG method
+    let result = cg(&mat, &rhs, 1e-10, 1e-8).unwrap();
+    // Calculate the error
     let e = (solution - result.solution()).norm();
     println!("error: {}", e);
 }
 ```
 
-If you want to know the residual and the approximate solution at each iteration, the iterator will help you.
+If you want to know the residual, the approximate solution and the conjugate direction at each iteration, the iterator will help you.
 
 ```rust
 let abstol = 1e-10;
@@ -99,6 +97,7 @@ let mut solver = CG::new(&mat, &rhs, abstol, reltol).unwrap();
 while let Some(residual) = solver.next() {
     println!("residual: {residual}");
     println!("solution: {:#?}", solver.solution());
+    println!("conjugate direction: {:#?}", solver.conjugate_direction());
 }
 let e = (solution - solver.solution()).norm();
 println!("error: {}", e);
