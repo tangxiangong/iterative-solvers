@@ -1,5 +1,8 @@
 use criterion::{Criterion, criterion_group, criterion_main};
-use iterative_solvers::utils::{dense::symmetric_tridiagonal, sparse::{symmetric_tridiagonal_csc, symmetric_tridiagonal_csr}};
+use iterative_solvers::utils::{
+    dense::symmetric_tridiagonal,
+    sparse::{symmetric_tridiagonal_csc, symmetric_tridiagonal_csr},
+};
 use nalgebra_sparse::{CscMatrix, CsrMatrix};
 use std::hint::black_box;
 
