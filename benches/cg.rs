@@ -1,5 +1,5 @@
 use criterion::{Criterion, criterion_group, criterion_main};
-use iterative_solvers::{CG, utils::symmetric_tridiagonal};
+use iterative_solvers::{CG, utils::dense::symmetric_tridiagonal};
 use nalgebra::DVector;
 use std::{f64::consts::PI, hint::black_box};
 
