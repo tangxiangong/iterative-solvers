@@ -6,11 +6,11 @@ pub use error::*;
 #[cfg(feature = "nalgebra")]
 mod nalgebra;
 
-// #[cfg(feature = "faer")]
-// mod faer;
+#[cfg(feature = "faer")]
+mod faer;
 
 #[cfg(feature = "nalgebra")]
 pub use nalgebra::*;
 
-// #[cfg(feature = "faer")]
-// pub use faer::*;
+#[cfg(feature = "faer")]
+pub use faer::*;
