@@ -1,6 +1,12 @@
 //! Conjugate Gradient (CG) method.
 
-use crate::{IterSolverError, IterSolverResult, faer::ops::MatOp, is_vector};
+use std::ops::Mul;
+
+use crate::{
+    IterSolverError, IterSolverResult,
+    faer::ops::MatOp,
+    utils::{axpy, dot, is_vector},
+};
 use faer::Mat;
 
 /// Conjugate Gradient (CG) method for solving linear systems Ax = b.
@@ -39,8 +45,8 @@ use faer::Mat;
 /// let solution = cg.solve();
 /// ```
 #[derive(Debug, Clone)]
-pub struct CG<'mat> {
-    mat: &'mat Mat<f64>,
+pub struct CG<'mat, M: MatOp> {
+    mat: &'mat M,
     solution: Mat<f64>,
     residual: f64,
     iteration: usize,
@@ -51,7 +57,7 @@ pub struct CG<'mat> {
     prev_residual: f64,
 }
 
-impl<'mat> CG<'mat> {
+impl<'mat, M: MatOp> CG<'mat, M> {
     /// Create a new `CG` solver with the given matrix, right-hand side, and tolerance.
     ///
     /// # Arguments
@@ -84,7 +90,7 @@ impl<'mat> CG<'mat> {
     /// let solution = cg.solve();
     /// ```
     pub fn new(
-        mat: &'mat Mat<f64>,
+        mat: &'mat M,
         rhs: &'mat Mat<f64>,
         abstol: f64,
         reltol: f64,
@@ -171,14 +177,14 @@ impl<'mat> CG<'mat> {
     /// let solution = cg.solve();
     /// ```
     pub fn new_with_initial_guess(
-        mat: &'mat Mat<f64>,
+        mat: &'mat M,
         rhs: &'mat Mat<f64>,
         initial_guess: Mat<f64>,
         abstol: f64,
         reltol: f64,
     ) -> IterSolverResult<Self>
-// where
-    //     &'mat Mat: Mul<DVector<f64>, Output = DVector<f64>>,
+    where
+        &'mat M: Mul<Mat<f64>, Output = Mat<f64>>,
     {
         if !mat.is_square() {
             return Err(IterSolverError::DimensionError(format!(
@@ -276,7 +282,7 @@ impl<'mat> CG<'mat> {
     }
 
     /// Get the matrix.
-    pub fn mat(&self) -> &Mat<f64> {
+    pub fn mat(&self) -> &M {
         self.mat
     }
 
@@ -291,7 +297,7 @@ impl<'mat> CG<'mat> {
     }
 }
 
-impl<'mat> Iterator for CG<'mat> {
+impl<'mat, M: MatOp> Iterator for CG<'mat, M> {
     type Item = f64;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -302,7 +308,7 @@ impl<'mat> Iterator for CG<'mat> {
         // u = r + beta * u
         let beta = self.residual.powi(2) / self.prev_residual.powi(2);
 
-        self.u.axpy(1.0, &self.r, beta);
+        axpy(&mut self.u, 1.0, &self.r, beta);
 
         // c = A * u
         self.mat.gemv(1.0, &self.u, 0.0, &mut self.c);
@@ -310,9 +316,9 @@ impl<'mat> Iterator for CG<'mat> {
         // update solution and residual
         // x = x + alpha * u
         // r = r - alpha * c
-        let alpha = self.residual.powi(2) / self.u.dot(&self.c).unwrap();
-        self.solution.axpy(alpha, &self.u, 1.0);
-        self.r.axpy(-alpha, &self.c, 1.0);
+        let alpha = self.residual.powi(2) / dot(&self.u, &self.c).unwrap();
+        axpy(&mut self.solution, alpha, &self.u, 1.0);
+        axpy(&mut self.r, -alpha, &self.c, 1.0);
 
         self.prev_residual = self.residual;
         self.residual = self.r.norm_l2();
@@ -353,12 +359,12 @@ impl<'mat> Iterator for CG<'mat> {
 ///
 /// let solution = cg(&mat, &rhs, abstol, reltol).unwrap();
 /// ```
-pub fn cg<'mat>(
-    mat: &'mat Mat<f64>,
+pub fn cg<'mat, M: MatOp>(
+    mat: &'mat M,
     rhs: &'mat Mat<f64>,
     abstol: f64,
     reltol: f64,
-) -> IterSolverResult<CG<'mat>> {
+) -> IterSolverResult<CG<'mat, M>> {
     let mut solver = CG::new(mat, rhs, abstol, reltol)?;
     solver.by_ref().count();
     Ok(solver)
@@ -400,61 +406,61 @@ pub fn cg<'mat>(
 ///
 /// let solution = cg_with_initial_guess(&mat, &rhs, initial_guess, abstol, reltol).unwrap();
 /// ```
-pub fn cg_with_initial_guess<'mat>(
-    mat: &'mat Mat<f64>,
+pub fn cg_with_initial_guess<'mat, M: MatOp>(
+    mat: &'mat M,
     rhs: &'mat Mat<f64>,
     initial_guess: Mat<f64>,
     abstol: f64,
     reltol: f64,
-) -> IterSolverResult<CG<'mat>>
-// where
-//     &'mat Mat: Mul<DVector<f64>, Output = DVector<f64>>,
+) -> IterSolverResult<CG<'mat, M>>
+where
+    &'mat M: Mul<Mat<f64>, Output = Mat<f64>>,
 {
     let mut solver = CG::new_with_initial_guess(mat, rhs, initial_guess, abstol, reltol)?;
     solver.by_ref().count();
     Ok(solver)
 }
 
-// #[cfg(test)]
-// mod tests {
-//     use std::f64::consts::PI;
+#[cfg(test)]
+mod tests {
+    use std::f64::consts::PI;
 
-//     use super::*;
-//     use crate::utils::{dense::symmetric_tridiagonal, sparse::symmetric_tridiagonal_csc};
+    use super::*;
+    use crate::utils::{dense::symmetric_tridiagonal, sparse::symmetric_tridiagonal_csc};
 
-//     #[test]
-//     fn test_cg_dense() {
-//         let n = 1024;
-//         let h = 1.0 / 1024.0;
-//         let a = vec![2.0 / (h * h); n - 1];
-//         let b = vec![-1.0 / (h * h); n - 2];
-//         let mat = symmetric_tridiagonal(&a, &b).unwrap();
-//         let rhs: Vec<_> = (1..n)
-//             .map(|i| PI * PI * (i as f64 * h * PI).sin())
-//             .collect();
-//         let solution: Vec<_> = (1..n).map(|i| (i as f64 * h * PI).sin()).collect();
-//         let solution = DVector::from_vec(solution);
-//         let rhs = DVector::from_vec(rhs);
-//         let solver = cg(&mat, &rhs, 1e-10, 1e-8).unwrap();
-//         let e = (solution - solver.solution()).norm();
-//         assert!(e < 1e-4);
-//     }
+    #[test]
+    fn test_cg_dense() {
+        let n = 1024;
+        let h = 1.0 / 1024.0;
+        let a = vec![2.0 / (h * h); n - 1];
+        let b = vec![-1.0 / (h * h); n - 2];
+        let mat = symmetric_tridiagonal(&a, &b).unwrap();
+        let rhs: Vec<_> = (1..n)
+            .map(|i| PI * PI * (i as f64 * h * PI).sin())
+            .collect();
+        let solution: Vec<_> = (1..n).map(|i| (i as f64 * h * PI).sin()).collect();
+        let solution = Mat::from_fn(n - 1, 1, |i, _| solution[i]);
+        let rhs = Mat::from_fn(n - 1, 1, |i, _| rhs[i]);
+        let solver = cg(&mat, &rhs, 1e-10, 1e-8).unwrap();
+        let e = (solution - solver.solution()).norm_l2();
+        assert!(e < 1e-4);
+    }
 
-//     #[test]
-//     fn test_cg_sparse() {
-//         let n = 1024;
-//         let h = 1.0 / 1024.0;
-//         let a = vec![2.0 / (h * h); n - 1];
-//         let b = vec![-1.0 / (h * h); n - 2];
-//         let mat = symmetric_tridiagonal_csc(&a, &b).unwrap();
-//         let rhs: Vec<_> = (1..n)
-//             .map(|i| PI * PI * (i as f64 * h * PI).sin())
-//             .collect();
-//         let solution: Vec<_> = (1..n).map(|i| (i as f64 * h * PI).sin()).collect();
-//         let solution = DVector::from_vec(solution);
-//         let rhs = DVector::from_vec(rhs);
-//         let solver = cg(&mat, &rhs, 1e-10, 1e-8).unwrap();
-//         let e = (solution - solver.solution()).norm();
-//         assert!(e < 1e-4);
-//     }
-// }
+    #[test]
+    fn test_cg_sparse() {
+        let n = 1024;
+        let h = 1.0 / 1024.0;
+        let a = vec![2.0 / (h * h); n - 1];
+        let b = vec![-1.0 / (h * h); n - 2];
+        let mat = symmetric_tridiagonal_csc(&a, &b).unwrap();
+        let rhs: Vec<_> = (1..n)
+            .map(|i| PI * PI * (i as f64 * h * PI).sin())
+            .collect();
+        let solution: Vec<_> = (1..n).map(|i| (i as f64 * h * PI).sin()).collect();
+        let solution = Mat::from_fn(n - 1, 1, |i, _| solution[i]);
+        let rhs = Mat::from_fn(n - 1, 1, |i, _| rhs[i]);
+        let solver = cg(&mat, &rhs, 1e-10, 1e-8).unwrap();
+        let e = (solution - solver.solution()).norm_l2();
+        assert!(e < 1e-4);
+    }
+}
