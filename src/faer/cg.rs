@@ -32,12 +32,21 @@ use faer::Mat;
 /// # Examples
 ///
 /// ```rust
-/// use nalgebra::{DMatrix, DVector};
+/// use faer::Mat;
 /// use iterative_solvers::CG;
+/// use iterative_solvers::utils::dense::symmetric_tridiagonal;
+/// use std::f64::consts::PI;
 ///
-/// // Create a simple 2x2 symmetric positive definite system
-/// let mat = DMatrix::from_row_slice(2, 2, &[4.0, 1.0, 1.0, 3.0]);
-/// let rhs = DVector::from_vec(vec![1.0, 2.0]);
+/// // Create a simple symmetric positive definite system
+/// let n = 1024;
+/// let h = 1.0 / 1024.0;
+/// let a = vec![2.0 / (h * h); n - 1];
+/// let b = vec![-1.0 / (h * h); n - 2];
+/// let mat = symmetric_tridiagonal(&a, &b).unwrap();
+/// let rhs: Vec<_> = (1..n)
+///     .map(|i| PI * PI * (i as f64 * h * PI).sin())
+///     .collect();
+/// let rhs = Mat::from_fn(n - 1, 1, |i, _| rhs[i]);
 /// let abstol = 1e-10;
 /// let reltol = 1e-8;
 ///
@@ -77,12 +86,21 @@ impl<'mat, M: MatOp> CG<'mat, M> {
     /// # Examples
     ///
     /// ```rust
-    /// use nalgebra::{DMatrix, DVector};
+    /// use faer::Mat;
     /// use iterative_solvers::CG;
+    /// use iterative_solvers::utils::dense::symmetric_tridiagonal;
+    /// use std::f64::consts::PI;
     ///
-    /// // Create a simple 2x2 symmetric positive definite system
-    /// let mat = DMatrix::from_row_slice(2, 2, &[4.0, 1.0, 1.0, 3.0]);
-    /// let rhs = DVector::from_vec(vec![1.0, 2.0]);
+    /// // Create a simple symmetric positive definite system
+    /// let n = 1024;
+    /// let h = 1.0 / 1024.0;
+    /// let a = vec![2.0 / (h * h); n - 1];
+    /// let b = vec![-1.0 / (h * h); n - 2];
+    /// let mat = symmetric_tridiagonal(&a, &b).unwrap();
+    /// let rhs: Vec<_> = (1..n)
+    ///     .map(|i| PI * PI * (i as f64 * h * PI).sin())
+    ///     .collect();
+    /// let rhs = Mat::from_fn(n - 1, 1, |i, _| rhs[i]);
     /// let abstol = 1e-10;
     /// let reltol = 1e-8;
     ///
@@ -163,15 +181,24 @@ impl<'mat, M: MatOp> CG<'mat, M> {
     /// # Examples
     ///
     /// ```rust
-    /// use nalgebra::{DMatrix, DVector};
+    /// use faer::Mat;
     /// use iterative_solvers::CG;
+    /// use iterative_solvers::utils::dense::symmetric_tridiagonal;
+    /// use std::f64::consts::PI;
     ///
-    /// // Create a simple 2x2 symmetric positive definite system
-    /// let mat = DMatrix::from_row_slice(2, 2, &[4.0, 1.0, 1.0, 3.0]);
-    /// let rhs = DVector::from_vec(vec![1.0, 2.0]);
+    /// // Create a simple symmetric positive definite system
+    /// let n = 1024;
+    /// let h = 1.0 / 1024.0;
+    /// let a = vec![2.0 / (h * h); n - 1];
+    /// let b = vec![-1.0 / (h * h); n - 2];
+    /// let mat = symmetric_tridiagonal(&a, &b).unwrap();
+    /// let rhs: Vec<_> = (1..n)
+    ///     .map(|i| PI * PI * (i as f64 * h * PI).sin())
+    ///     .collect();
+    /// let rhs = Mat::from_fn(n - 1, 1, |i, _| rhs[i]);
     /// let abstol = 1e-10;
     /// let reltol = 1e-8;
-    /// let initial_guess = DVector::from_vec(vec![0.0, 0.0]);
+    /// let initial_guess = Mat::from_fn(n - 1, 1, |i, _| 0.0);
     ///
     /// let mut cg = CG::new_with_initial_guess(&mat, &rhs, initial_guess, abstol, reltol).unwrap();
     /// let solution = cg.solve();
@@ -348,16 +375,29 @@ impl<'mat, M: MatOp> Iterator for CG<'mat, M> {
 /// # Examples
 ///
 /// ```rust
-/// use nalgebra::{DMatrix, DVector};
+/// use faer::Mat;
 /// use iterative_solvers::cg;
+/// use iterative_solvers::utils::dense::symmetric_tridiagonal;
+/// use std::f64::consts::PI;
 ///
 /// // Create a simple 2x2 symmetric positive definite system
-/// let mat = DMatrix::from_row_slice(2, 2, &[4.0, 1.0, 1.0, 3.0]);
-/// let rhs = DVector::from_vec(vec![1.0, 2.0]);
+/// let n = 1024;
+/// let h = 1.0 / 1024.0;
+/// let a = vec![2.0 / (h * h); n - 1];
+/// let b = vec![-1.0 / (h * h); n - 2];
+/// let mat = symmetric_tridiagonal(&a, &b).unwrap();
+/// let rhs: Vec<_> = (1..n)
+///     .map(|i| PI * PI * (i as f64 * h * PI).sin())
+///     .collect();
+/// let rhs = Mat::from_fn(n - 1, 1, |i, _| rhs[i]);
+/// let solution: Vec<_> = (1..n).map(|i| (i as f64 * h * PI).sin()).collect();
+/// let solution = Mat::from_fn(n - 1, 1, |i, _| solution[i]);
 /// let abstol = 1e-10;
 /// let reltol = 1e-8;
 ///
-/// let solution = cg(&mat, &rhs, abstol, reltol).unwrap();
+/// let solver = cg(&mat, &rhs, abstol, reltol).unwrap();
+/// let e = (solution - solver.solution()).norm_l2();
+/// println!("error: {}", e);
 /// ```
 pub fn cg<'mat, M: MatOp>(
     mat: &'mat M,
@@ -394,17 +434,31 @@ pub fn cg<'mat, M: MatOp>(
 /// # Examples
 ///
 /// ```rust
-/// use nalgebra::{DMatrix, DVector};
-/// use iterative_solvers::cg_with_initial_guess;
+/// ```rust
+/// use faer::Mat;
+/// use iterative_solvers::cg;
+/// use iterative_solvers::utils::dense::symmetric_tridiagonal;
+/// use std::f64::consts::PI;
 ///
 /// // Create a simple 2x2 symmetric positive definite system
-/// let mat = DMatrix::from_row_slice(2, 2, &[4.0, 1.0, 1.0, 3.0]);
-/// let rhs = DVector::from_vec(vec![1.0, 2.0]);
+/// let n = 1024;
+/// let h = 1.0 / 1024.0;
+/// let a = vec![2.0 / (h * h); n - 1];
+/// let b = vec![-1.0 / (h * h); n - 2];
+/// let mat = symmetric_tridiagonal(&a, &b).unwrap();
+/// let rhs: Vec<_> = (1..n)
+///     .map(|i| PI * PI * (i as f64 * h * PI).sin())
+///     .collect();
+/// let rhs = Mat::from_fn(n - 1, 1, |i, _| rhs[i]);
+/// let solution: Vec<_> = (1..n).map(|i| (i as f64 * h * PI).sin()).collect();
+/// let solution = Mat::from_fn(n - 1, 1, |i, _| solution[i]);
 /// let abstol = 1e-10;
 /// let reltol = 1e-8;
-/// let initial_guess = DVector::from_vec(vec![0.0, 0.0]);
+/// let initial_guess = Mat::from_fn(n - 1, 1, |i, _| 0.0);
 ///
-/// let solution = cg_with_initial_guess(&mat, &rhs, initial_guess, abstol, reltol).unwrap();
+/// let solver = cg_with_initial_guess(&mat, &rhs, initial_guess, abstol, reltol).unwrap();
+/// let e = (solution - solver.solution()).norm_l2();
+/// println!("error: {}", e);
 /// ```
 pub fn cg_with_initial_guess<'mat, M: MatOp>(
     mat: &'mat M,

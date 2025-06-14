@@ -2,10 +2,12 @@ use faer::{Mat, unzip, zip};
 
 use crate::{IterSolverError, IterSolverResult};
 
+/// Check if the matrix is a vector.
 pub fn is_vector(mat: &Mat<f64>) -> bool {
     mat.ncols() == 1
 }
 
+/// Compute the dot product of two vectors.
 pub fn dot(lhs: &Mat<f64>, rhs: &Mat<f64>) -> IterSolverResult<f64> {
     if !is_vector(lhs) {
         return Err(IterSolverError::InvalidInput(

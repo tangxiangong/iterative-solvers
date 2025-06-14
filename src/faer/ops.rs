@@ -5,11 +5,15 @@ use faer::{
     sparse::{SparseColMat, SparseRowMat, linalg::matmul::sparse_dense_matmul},
 };
 
+/// A trait for matrix operations.
 pub trait MatOp: LinOp<f64> {
+    /// Check if the matrix is square.
     fn is_square(&self) -> bool;
 
+    /// Get the number of elements in the matrix.
     fn len(&self) -> usize;
 
+    /// Check if the matrix is empty.
     fn is_empty(&self) -> bool {
         self.len() == 0
     }

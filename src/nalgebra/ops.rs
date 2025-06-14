@@ -7,16 +7,21 @@ use nalgebra_sparse::{
     },
 };
 
+/// A trait for matrix operations.
 pub trait MatrixOp {
+    /// Get the number of rows in the matrix.
     fn nrows(&self) -> usize;
 
+    /// Get the number of columns in the matrix.
     fn ncols(&self) -> usize;
 
+    /// Check if the matrix is square.
     fn is_square(&self) -> bool;
 
-    // y = alpha * self * x + beta * y
+    /// y = alpha * self * x + beta * y
     fn gemv(&self, alpha: f64, x: &DVector<f64>, beta: f64, y: &mut DVector<f64>);
 
+    /// Check if the matrix is empty.
     fn is_empty(&self) -> bool;
 }
 

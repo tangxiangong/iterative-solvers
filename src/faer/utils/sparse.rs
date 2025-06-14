@@ -20,7 +20,7 @@ use crate::{IterSolverError, IterSolverResult};
 ///
 /// # Returns
 ///
-/// A `CsrMatrix<f64>` containing the diagonal matrix. If `data` is empty, returns
+/// A `SparseRowMat<usize, f64>` containing the diagonal matrix. If `data` is empty, returns
 /// a 0×0 matrix.
 ///
 /// # Examples
@@ -197,7 +197,7 @@ pub fn symmetric_tridiagonal_csr(
 ///
 /// # Returns
 ///
-/// A `CscMatrix<f64>` containing the diagonal matrix. If `data` is empty, returns
+/// A `SparseColMat<usize, f64>` containing the diagonal matrix. If `data` is empty, returns
 /// a 0×0 matrix.
 ///
 /// # Examples
@@ -279,13 +279,13 @@ pub fn diagm_csc(data: &[f64], offset: i32) -> SparseColMat<usize, f64> {
 /// # Examples
 ///
 /// ```rust
-/// use iterative_solvers::utils::sparse::tridiagonal_csr;
+/// use iterative_solvers::utils::sparse::tridiagonal_csc;
 ///
 /// let diagonal = vec![2.0, 3.0, 4.0];
 /// let lower = vec![1.0, 1.0];
 /// let upper = vec![1.0, 1.0];
 ///
-/// let result = tridiagonal_csr(&diagonal, &lower, &upper).unwrap();
+/// let result = tridiagonal_csc(&diagonal, &lower, &upper).unwrap();
 /// // Creates:
 /// // [2.0, 1.0, 0.0]
 /// // [1.0, 3.0, 1.0]

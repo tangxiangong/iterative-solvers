@@ -329,12 +329,12 @@ pub fn tridiagonal_csc(
 /// # Examples
 ///
 /// ```rust
-/// use iterative_solvers::utils::sparse::symmetric_tridiagonal_csr;
+/// use iterative_solvers::utils::sparse::symmetric_tridiagonal_csc;
 ///
 /// let diagonal = vec![2.0, 3.0, 4.0];
 /// let sub_diagonal = vec![1.0, 1.5];
 ///
-/// let result = symmetric_tridiagonal_csr(&diagonal, &sub_diagonal).unwrap();
+/// let result = symmetric_tridiagonal_csc(&diagonal, &sub_diagonal).unwrap();
 /// // Creates:
 /// // [2.0, 1.0, 0.0]
 /// // [1.0, 3.0, 1.5]
