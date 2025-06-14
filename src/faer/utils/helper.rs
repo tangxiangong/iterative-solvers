@@ -1,4 +1,4 @@
-use faer::{Conj, Mat, linalg::matmul::dot::inner_prod};
+use faer::{Mat, unzip, zip};
 
 use crate::{IterSolverError, IterSolverResult};
 
@@ -22,16 +22,21 @@ pub fn dot(lhs: &Mat<f64>, rhs: &Mat<f64>) -> IterSolverResult<f64> {
             "The input parameter is not a vector".to_string(),
         ));
     }
-    Ok(inner_prod(
-        lhs.row(0),
-        Conj::No,
-        rhs.row(0).transpose(),
-        Conj::No,
-    ))
+
+    // 计算两个列向量的点积
+    let mut result = 0.0;
+    zip!(lhs, rhs).for_each(|unzip!(lhs_val, rhs_val)| {
+        result += lhs_val * rhs_val;
+    });
+    Ok(result)
 }
 
 /// self = alpha * x + beta * self
 pub fn axpy(mat: &mut Mat<f64>, alpha: f64, x: &Mat<f64>, beta: f64) {
-    *mat *= beta;
-    *mat = alpha * x + &*mat;
+    if beta != 1.0 {
+        *mat *= beta;
+    }
+    if alpha != 0.0 {
+        *mat += alpha * x;
+    }
 }
