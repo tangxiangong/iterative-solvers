@@ -16,13 +16,13 @@ This library provides Rust implementations of iterative algorithms for solving l
 ## Supported Linear Algebra Libraries
 
 - [x] [nalgebra](https://github.com/dimforge/nalgebra) (default)
-- [ ] [faer](https://github.com/sarah-quinones/faer-rs)
+- [x] [faer](https://github.com/sarah-quinones/faer-rs)
 
 You can choose your preferred backend using Cargo features:
 
 ```toml
 [dependencies]
-iterative-solvers = { version = "0.1", default-features = false, features = ["faer"] }
+iterative-solvers = { version = "*", default-features = false, features = ["faer"] }
 ```
 
 ## Usage
