@@ -2,6 +2,50 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.1] - 2025-06-15
+
+### 🚀 Features
+
+- Add struct `MINRES` but not implement
+- In the `IterSolverError` enumeration, add the `InvalidInput` error type to handle invalid input
+- Implement the structure of the Conjugate Gradient (CG) method and its related functions, supporting the solution of linear equations, and adding features for matrix operations.
+- Add tool module, including related functions for sparse and dense matrices, and introduce new utility functions in the `faer` module.
+- Utility functions for adding sparse matrices, including the creation features for diagonal, tridiagonal, and symmetric tridiagonal matrices.
+- Add practical functions for adding dense matrices, including the creation functions for diagonal matrices, tridiagonal matrices, and symmetric tridiagonal matrices.
+- New practical functions for vector operations, including vector checking, dot product calculation, and linear combination (axpy) functionality.
+- Add auxiliary modules and export related functions to enhance the practicality of sparse and dense matrices.
+- Implement the gemv operation for sparse matrices, optimize the matrix multiplication function, and remove unnecessary dot and axpy methods.
+- Modify the conjugate gradient (CG) method to support more general matrix types, and update the related functions to use the new matrix operation and vector operation tools.
+
+### 🐛 Bug Fixes
+
+- Uncomment the `faer` module, enable its functionality, and export the relevant content.
+- Fix function `dot`
+
+### 💼 Other
+
+- Enhanced benchmark tests for the conjugate gradient method, supporting sparse matrices in CSC and CSR formats, while removing the diagonal benchmark test files that are no longer in use.
+- Bump version 0.2.1
+
+### 🚜 Refactor
+
+- Reformat code
+- Temporarily block `benches` and `examples`
+- Move the `is_vector` function to  `utils::helper`.
+
+### 📚 Documentation
+
+- Update the documentation
+- Update the document, mark the `faer` backend as supported, and modify the Cargo feature version requirements.
+
+### ⚙️ Miscellaneous Tasks
+
+- Update version to 0.2.0
+- Rename bench name
+- Delete deny toml
+- Update the `Cargo.toml` file to set the default feature to `faer`, enable the `faer` dependency, and comment out the benchmark test configuration.
+- Change the default feature to `nalgebra`,  rebase `cg` and `diagm` benchmark test files
+
 ## [0.2.0] - 2025-06-05
 
 ### 🚀 Features
