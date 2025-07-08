@@ -179,14 +179,14 @@ mod tests {
     fn test_diag() {
         let data = vec![1.0, 2.0, 3.0];
         let mat = diagm(&data, 0);
-        println!("{}", mat);
+        println!("{mat:?}");
         let mat = diagm(&data, 1);
-        println!("{}", mat);
+        println!("{mat:?}");
         let mat = diagm(&data, -1);
-        println!("{}", mat);
+        println!("{mat:?}");
         let mat = diagm(&data, 2);
-        println!("{}", mat);
+        println!("{mat:?}");
         let mat = diagm(&data, -2);
-        println!("{}", mat);
+        println!("{mat:?}");
     }
 }
