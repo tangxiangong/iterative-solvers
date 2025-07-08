@@ -11,6 +11,11 @@ categories = ["mathematics"]
 keywords = ["numerical-algorithm", "math", "cg"]
 exclude = ["julia-bench"]
 
+# docs.rs 配置
+[package.metadata.docs.rs]
+features = ["nalgebra"]
+rustdoc-args = ["--cfg", "docsrs"]
+
 [lib]
 name = "iterative_solvers"
 doctest = false
@@ -37,6 +42,8 @@ faer = { version = "0.22.6", optional = true }
 
 [dev-dependencies]
 criterion = "0.6.0"
+nalgebra = "0.33"
+nalgebra-sparse = "0.10"
 
 [[bench]]
 name = "diagm"
