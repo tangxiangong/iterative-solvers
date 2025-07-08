@@ -1,7 +1,10 @@
 //! Utility functions for creating dense matrices.
 
-use crate::{IterSolverError, IterSolverResult};
-use nalgebra::{DMatrix, DVector};
+#[allow(unused_imports)]
+use crate::{
+    IterSolverError, IterSolverResult,
+    ops::{Matrix, Vector},
+};
 
 /// Creates a diagonal matrix with the given data placed on a specified diagonal.
 ///
@@ -38,31 +41,65 @@ use nalgebra::{DMatrix, DVector};
 /// // [0.0, 0.0, 0.0, 3.0]
 /// // [0.0, 0.0, 0.0, 0.0]
 /// ```
-pub fn diagm(data: &[f64], offset: i32) -> DMatrix<f64> {
+pub fn diagm(data: &[f64], offset: i32) -> Matrix<f64> {
     if data.is_empty() {
-        return DMatrix::zeros(0, 0);
+        return Matrix::zeros(0, 0);
     }
     match offset {
-        0 => DMatrix::from_diagonal(&DVector::from_column_slice(data)),
+        0 => {
+            #[cfg(feature = "nalgebra")]
+            {
+                Matrix::from_diagonal(&Vector::from_column_slice(data))
+            }
+            #[cfg(feature = "faer")]
+            {
+                from_diagonal(data)
+            }
+        }
         offset => {
             let offset_usize = offset.unsigned_abs() as usize;
             let n = data.len() + offset_usize;
-            let mut mat = DMatrix::zeros(n, n);
+            let mut mat = Matrix::zeros(n, n);
 
             unsafe {
                 if offset > 0 {
                     data.iter().enumerate().for_each(|(idx, &val)| {
-                        *mat.get_unchecked_mut((idx, idx + offset_usize)) = val
+                        #[cfg(feature = "nalgebra")]
+                        {
+                            *mat.get_unchecked_mut((idx, idx + offset_usize)) = val
+                        }
+                        #[cfg(feature = "faer")]
+                        {
+                            *mat.get_mut_unchecked(idx, idx + offset_usize) = val
+                        }
                     });
                 } else {
                     data.iter().enumerate().for_each(|(idx, &val)| {
-                        *mat.get_unchecked_mut((idx + offset_usize, idx)) = val
+                        #[cfg(feature = "nalgebra")]
+                        {
+                            *mat.get_unchecked_mut((idx + offset_usize, idx)) = val
+                        }
+                        #[cfg(feature = "faer")]
+                        {
+                            *mat.get_mut_unchecked(idx + offset_usize, idx) = val
+                        }
                     });
                 }
             }
             mat
         }
     }
+}
+
+#[cfg(feature = "faer")]
+fn from_diagonal(data: &[f64]) -> Matrix<f64> {
+    let n = data.len();
+    let mut mat = Matrix::zeros(n, n);
+
+    data.iter().enumerate().for_each(|(idx, &val)| unsafe {
+        *mat.get_mut_unchecked(idx, idx) = val;
+    });
+    mat
 }
 
 /// Creates a tridiagonal matrix from diagonal, lower diagonal, and upper diagonal vectors.
@@ -112,7 +149,7 @@ pub fn tridiagonal(
     diagonal: &[f64],
     lower: &[f64],
     upper: &[f64],
-) -> IterSolverResult<DMatrix<f64>> {
+) -> IterSolverResult<Matrix<f64>> {
     if diagonal.len() != lower.len() + 1 || lower.len() != upper.len() {
         return Err(IterSolverError::DimensionError(format!(
             "For tridiagonal matrix, the length of `diagonal` {}, the length of `lower` {} and `upper` {} do not match",
@@ -167,7 +204,7 @@ pub fn tridiagonal(
 pub fn symmetric_tridiagonal(
     diagonal: &[f64],
     sub_diagonal: &[f64],
-) -> IterSolverResult<DMatrix<f64>> {
+) -> IterSolverResult<Matrix<f64>> {
     tridiagonal(diagonal, sub_diagonal, sub_diagonal)
 }
 

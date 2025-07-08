@@ -2,12 +2,12 @@
 
 use std::ops::Mul;
 
+use super::MatrixOp;
 use crate::{
     IterSolverError, IterSolverResult,
-    faer::ops::MatOp,
-    utils::{axpy, dot, is_vector},
+    ops::Vector,
+    utils::{axpy, dot, is_vector, norm_l2, zeros},
 };
-use faer::Mat;
 
 /// Conjugate Gradient (CG) method for solving linear systems Ax = b.
 ///
@@ -31,7 +31,30 @@ use faer::Mat;
 ///
 /// # Examples
 ///
+/// **With nalgebra feature:**
+///
 /// ```rust
+/// # #[cfg(feature = "nalgebra")]
+/// # {
+/// use nalgebra::{DMatrix, DVector};
+/// use iterative_solvers::CG;
+///
+/// // Create a simple 2x2 symmetric positive definite system
+/// let mat = DMatrix::from_row_slice(2, 2, &[4.0, 1.0, 1.0, 3.0]);
+/// let rhs = DVector::from_vec(vec![1.0, 2.0]);
+/// let abstol = 1e-10;
+/// let reltol = 1e-8;
+///
+/// let mut cg = CG::new(&mat, &rhs, abstol, reltol).unwrap();
+/// let solution = cg.solve();
+/// # }
+/// ```
+///
+/// **With faer feature:**
+///
+/// ```rust
+/// # #[cfg(feature = "faer")]
+/// # {
 /// use faer::Mat;
 /// use iterative_solvers::CG;
 /// use iterative_solvers::utils::dense::symmetric_tridiagonal;
@@ -52,21 +75,22 @@ use faer::Mat;
 ///
 /// let mut cg = CG::new(&mat, &rhs, abstol, reltol).unwrap();
 /// let solution = cg.solve();
+/// # }
 /// ```
 #[derive(Debug, Clone)]
-pub struct CG<'mat, M: MatOp> {
-    mat: &'mat M,
-    solution: Mat<f64>,
+pub struct CG<'mat, Mat: MatrixOp> {
+    mat: &'mat Mat,
+    solution: Vector<f64>,
     residual: f64,
     iteration: usize,
-    r: Mat<f64>,
-    c: Mat<f64>,
-    u: Mat<f64>,
+    r: Vector<f64>,
+    c: Vector<f64>,
+    u: Vector<f64>,
     tol: f64,
     prev_residual: f64,
 }
 
-impl<'mat, M: MatOp> CG<'mat, M> {
+impl<'mat, Mat: MatrixOp> CG<'mat, Mat> {
     /// Create a new `CG` solver with the given matrix, right-hand side, and tolerance.
     ///
     /// # Arguments
@@ -85,7 +109,30 @@ impl<'mat, M: MatOp> CG<'mat, M> {
     ///
     /// # Examples
     ///
+    /// **With nalgebra feature:**
+    ///
     /// ```rust
+    /// # #[cfg(feature = "nalgebra")]
+    /// # {
+    /// use nalgebra::{DMatrix, DVector};
+    /// use iterative_solvers::CG;
+    ///
+    /// // Create a simple 2x2 symmetric positive definite system
+    /// let mat = DMatrix::from_row_slice(2, 2, &[4.0, 1.0, 1.0, 3.0]);
+    /// let rhs = DVector::from_vec(vec![1.0, 2.0]);
+    /// let abstol = 1e-10;
+    /// let reltol = 1e-8;
+    ///
+    /// let mut cg = CG::new(&mat, &rhs, abstol, reltol).unwrap();
+    /// let solution = cg.solve();
+    /// # }
+    /// ```
+    ///
+    /// **With faer feature:**
+    ///
+    /// ```rust
+    /// # #[cfg(feature = "faer")]
+    /// # {
     /// use faer::Mat;
     /// use iterative_solvers::CG;
     /// use iterative_solvers::utils::dense::symmetric_tridiagonal;
@@ -106,10 +153,11 @@ impl<'mat, M: MatOp> CG<'mat, M> {
     ///
     /// let mut cg = CG::new(&mat, &rhs, abstol, reltol).unwrap();
     /// let solution = cg.solve();
+    /// # }
     /// ```
     pub fn new(
-        mat: &'mat M,
-        rhs: &'mat Mat<f64>,
+        mat: &'mat Mat,
+        rhs: &'mat Vector<f64>,
         abstol: f64,
         reltol: f64,
     ) -> IterSolverResult<Self> {
@@ -136,11 +184,16 @@ impl<'mat, M: MatOp> CG<'mat, M> {
         }
 
         let n = mat.nrows();
-        let x = Mat::zeros(n, 1);
+        let x = zeros(n);
+
         let r = rhs.clone();
-        let c = Mat::zeros(n, 1);
-        let u = Mat::zeros(n, 1);
-        let residual = r.norm_l2();
+
+        let c = zeros(n);
+
+        let u = zeros(n);
+
+        let residual = norm_l2(&r);
+
         let prev_residual = residual;
         let iteration = 0;
         let tol = abstol.max(reltol * residual);
@@ -180,7 +233,31 @@ impl<'mat, M: MatOp> CG<'mat, M> {
     ///
     /// # Examples
     ///
+    /// **With nalgebra feature:**
+    ///
     /// ```rust
+    /// # #[cfg(feature = "nalgebra")]
+    /// # {
+    /// use nalgebra::{DMatrix, DVector};
+    /// use iterative_solvers::CG;
+    ///
+    /// // Create a simple 2x2 symmetric positive definite system
+    /// let mat = DMatrix::from_row_slice(2, 2, &[4.0, 1.0, 1.0, 3.0]);
+    /// let rhs = DVector::from_vec(vec![1.0, 2.0]);
+    /// let abstol = 1e-10;
+    /// let reltol = 1e-8;
+    /// let initial_guess = DVector::from_vec(vec![0.0, 0.0]);
+    ///
+    /// let mut cg = CG::new_with_initial_guess(&mat, &rhs, initial_guess, abstol, reltol).unwrap();
+    /// let solution = cg.solve();
+    /// # }
+    /// ```
+    ///
+    /// **With faer feature:**
+    ///
+    /// ```rust
+    /// # #[cfg(feature = "faer")]
+    /// # {
     /// use faer::Mat;
     /// use iterative_solvers::CG;
     /// use iterative_solvers::utils::dense::symmetric_tridiagonal;
@@ -202,16 +279,17 @@ impl<'mat, M: MatOp> CG<'mat, M> {
     ///
     /// let mut cg = CG::new_with_initial_guess(&mat, &rhs, initial_guess, abstol, reltol).unwrap();
     /// let solution = cg.solve();
+    /// # }
     /// ```
     pub fn new_with_initial_guess(
-        mat: &'mat M,
-        rhs: &'mat Mat<f64>,
-        initial_guess: Mat<f64>,
+        mat: &'mat Mat,
+        rhs: &'mat Vector<f64>,
+        initial_guess: Vector<f64>,
         abstol: f64,
         reltol: f64,
     ) -> IterSolverResult<Self>
     where
-        &'mat M: Mul<Mat<f64>, Output = Mat<f64>>,
+        &'mat Mat: Mul<Vector<f64>, Output = Vector<f64>>,
     {
         if !mat.is_square() {
             return Err(IterSolverError::DimensionError(format!(
@@ -227,6 +305,7 @@ impl<'mat, M: MatOp> CG<'mat, M> {
                 rhs.ncols()
             )));
         }
+
         if mat.nrows() != rhs.len() {
             return Err(IterSolverError::DimensionError(format!(
                 "The matrix with order {}, and the rhs with length {}, do not match",
@@ -234,6 +313,7 @@ impl<'mat, M: MatOp> CG<'mat, M> {
                 rhs.len()
             )));
         }
+
         if !is_vector(&initial_guess) {
             return Err(IterSolverError::DimensionError(format!(
                 "The `initial_guess` should be a vector, but got a matrix with shape ({}, {}).",
@@ -241,6 +321,7 @@ impl<'mat, M: MatOp> CG<'mat, M> {
                 initial_guess.ncols()
             )));
         }
+
         if initial_guess.len() != mat.nrows() {
             return Err(IterSolverError::DimensionError(format!(
                 "The initial guess with length {}, and the matrix with order {}, do not match",
@@ -250,9 +331,13 @@ impl<'mat, M: MatOp> CG<'mat, M> {
         }
         let n = mat.nrows();
         let r = rhs - mat * initial_guess.clone();
-        let c = Mat::zeros(n, 1);
-        let u = Mat::zeros(n, 1);
-        let residual = r.norm_l2();
+
+        let c = zeros(n);
+
+        let u = zeros(n);
+
+        let residual = norm_l2(&r);
+
         let prev_residual = residual;
         let iteration = 0;
         let tol = abstol.max(reltol * residual);
@@ -294,7 +379,7 @@ impl<'mat, M: MatOp> CG<'mat, M> {
     }
 
     /// Get the solution.
-    pub fn solution(&self) -> &Mat<f64> {
+    pub fn solution(&self) -> &Vector<f64> {
         &self.solution
     }
 
@@ -309,22 +394,22 @@ impl<'mat, M: MatOp> CG<'mat, M> {
     }
 
     /// Get the matrix.
-    pub fn mat(&self) -> &M {
+    pub fn mat(&self) -> &Mat {
         self.mat
     }
 
     /// Get the residual vector
-    pub fn residual_vector(&self) -> &Mat<f64> {
+    pub fn residual_vector(&self) -> &Vector<f64> {
         &self.r
     }
 
     /// Get the conjugate direction
-    pub fn conjugate_direction(&self) -> &Mat<f64> {
+    pub fn conjugate_direction(&self) -> &Vector<f64> {
         &self.u
     }
 }
 
-impl<'mat, M: MatOp> Iterator for CG<'mat, M> {
+impl<'mat, Mat: MatrixOp> Iterator for CG<'mat, Mat> {
     type Item = f64;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -348,7 +433,8 @@ impl<'mat, M: MatOp> Iterator for CG<'mat, M> {
         axpy(&mut self.r, -alpha, &self.c, 1.0);
 
         self.prev_residual = self.residual;
-        self.residual = self.r.norm_l2();
+
+        self.residual = norm_l2(&self.r);
 
         self.iteration += 1;
 
@@ -374,7 +460,29 @@ impl<'mat, M: MatOp> Iterator for CG<'mat, M> {
 ///
 /// # Examples
 ///
+/// **With nalgebra feature:**
+///
 /// ```rust
+/// # #[cfg(feature = "nalgebra")]
+/// # {
+/// use nalgebra::{DMatrix, DVector};
+/// use iterative_solvers::cg;
+///
+/// // Create a simple 2x2 symmetric positive definite system
+/// let mat = DMatrix::from_row_slice(2, 2, &[4.0, 1.0, 1.0, 3.0]);
+/// let rhs = DVector::from_vec(vec![1.0, 2.0]);
+/// let abstol = 1e-10;
+/// let reltol = 1e-8;
+///
+/// let solution = cg(&mat, &rhs, abstol, reltol).unwrap();
+/// # }
+/// ```
+///
+/// **With faer feature:**
+///
+/// ```rust
+/// # #[cfg(feature = "faer")]
+/// # {
 /// use faer::Mat;
 /// use iterative_solvers::cg;
 /// use iterative_solvers::utils::dense::symmetric_tridiagonal;
@@ -398,13 +506,14 @@ impl<'mat, M: MatOp> Iterator for CG<'mat, M> {
 /// let solver = cg(&mat, &rhs, abstol, reltol).unwrap();
 /// let e = (solution - solver.solution()).norm_l2();
 /// println!("error: {}", e);
+/// # }
 /// ```
-pub fn cg<'mat, M: MatOp>(
-    mat: &'mat M,
-    rhs: &'mat Mat<f64>,
+pub fn cg<'mat, Mat: MatrixOp>(
+    mat: &'mat Mat,
+    rhs: &'mat Vector<f64>,
     abstol: f64,
     reltol: f64,
-) -> IterSolverResult<CG<'mat, M>> {
+) -> IterSolverResult<CG<'mat, Mat>> {
     let mut solver = CG::new(mat, rhs, abstol, reltol)?;
     solver.by_ref().count();
     Ok(solver)
@@ -433,10 +542,32 @@ pub fn cg<'mat, M: MatOp>(
 ///
 /// # Examples
 ///
+/// **With nalgebra feature:**
+///
 /// ```rust
+/// # #[cfg(feature = "nalgebra")]
+/// # {
+/// use nalgebra::{DMatrix, DVector};
+/// use iterative_solvers::cg_with_initial_guess;
+///
+/// // Create a simple 2x2 symmetric positive definite system
+/// let mat = DMatrix::from_row_slice(2, 2, &[4.0, 1.0, 1.0, 3.0]);
+/// let rhs = DVector::from_vec(vec![1.0, 2.0]);
+/// let abstol = 1e-10;
+/// let reltol = 1e-8;
+/// let initial_guess = DVector::from_vec(vec![0.0, 0.0]);
+///
+/// let solution = cg_with_initial_guess(&mat, &rhs, initial_guess, abstol, reltol).unwrap();
+/// # }
+/// ```
+///
+/// **With faer feature:**
+///
 /// ```rust
+/// # #[cfg(feature = "faer")]
+/// # {
 /// use faer::Mat;
-/// use iterative_solvers::cg;
+/// use iterative_solvers::cg_with_initial_guess;
 /// use iterative_solvers::utils::dense::symmetric_tridiagonal;
 /// use std::f64::consts::PI;
 ///
@@ -459,16 +590,17 @@ pub fn cg<'mat, M: MatOp>(
 /// let solver = cg_with_initial_guess(&mat, &rhs, initial_guess, abstol, reltol).unwrap();
 /// let e = (solution - solver.solution()).norm_l2();
 /// println!("error: {}", e);
+/// # }
 /// ```
-pub fn cg_with_initial_guess<'mat, M: MatOp>(
-    mat: &'mat M,
-    rhs: &'mat Mat<f64>,
-    initial_guess: Mat<f64>,
+pub fn cg_with_initial_guess<'mat, Mat: MatrixOp>(
+    mat: &'mat Mat,
+    rhs: &'mat Vector<f64>,
+    initial_guess: Vector<f64>,
     abstol: f64,
     reltol: f64,
-) -> IterSolverResult<CG<'mat, M>>
+) -> IterSolverResult<CG<'mat, Mat>>
 where
-    &'mat M: Mul<Mat<f64>, Output = Mat<f64>>,
+    &'mat Mat: Mul<Vector<f64>, Output = Vector<f64>>,
 {
     let mut solver = CG::new_with_initial_guess(mat, rhs, initial_guess, abstol, reltol)?;
     solver.by_ref().count();
@@ -481,8 +613,30 @@ mod tests {
 
     use super::*;
     use crate::utils::{dense::symmetric_tridiagonal, sparse::symmetric_tridiagonal_csc};
+    #[cfg(feature = "faer")]
+    use faer::Mat;
 
     #[test]
+    #[cfg(feature = "nalgebra")]
+    fn test_cg_dense() {
+        let n = 1024;
+        let h = 1.0 / 1024.0;
+        let a = vec![2.0 / (h * h); n - 1];
+        let b = vec![-1.0 / (h * h); n - 2];
+        let mat = symmetric_tridiagonal(&a, &b).unwrap();
+        let rhs: Vec<_> = (1..n)
+            .map(|i| PI * PI * (i as f64 * h * PI).sin())
+            .collect();
+        let solution: Vec<_> = (1..n).map(|i| (i as f64 * h * PI).sin()).collect();
+        let solution = Vector::from_vec(solution);
+        let rhs = Vector::from_vec(rhs);
+        let solver = cg(&mat, &rhs, 1e-10, 1e-8).unwrap();
+        let e = (solution - solver.solution()).norm();
+        assert!(e < 1e-4);
+    }
+
+    #[test]
+    #[cfg(feature = "faer")]
     fn test_cg_dense() {
         let n = 1024;
         let h = 1.0 / 1024.0;
@@ -501,6 +655,25 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "nalgebra")]
+    fn test_cg_sparse() {
+        let n = 1024;
+        let h = 1.0 / 1024.0;
+        let a = vec![2.0 / (h * h); n - 1];
+        let b = vec![-1.0 / (h * h); n - 2];
+        let mat = symmetric_tridiagonal_csc(&a, &b).unwrap();
+        let rhs: Vec<_> = (1..n)
+            .map(|i| PI * PI * (i as f64 * h * PI).sin())
+            .collect();
+        let solution: Vec<_> = (1..n).map(|i| (i as f64 * h * PI).sin()).collect();
+        let solution = Vector::from_vec(solution);
+        let rhs = Vector::from_vec(rhs);
+        let solver = cg(&mat, &rhs, 1e-10, 1e-8).unwrap();
+        let e = (solution - solver.solution()).norm();
+        assert!(e < 1e-4);
+    }
+    #[test]
+    #[cfg(feature = "faer")]
     fn test_cg_sparse() {
         let n = 1024;
         let h = 1.0 / 1024.0;
