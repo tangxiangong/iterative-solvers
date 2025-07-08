@@ -3,6 +3,7 @@ use iterative_solvers::utils::{
     dense::symmetric_tridiagonal,
     sparse::{symmetric_tridiagonal_csc, symmetric_tridiagonal_csr},
 };
+#[cfg(feature = "nalgebra")]
 use nalgebra_sparse::{CscMatrix, CsrMatrix};
 use std::hint::black_box;
 
@@ -18,6 +19,7 @@ fn criterion_benchmark(c: &mut Criterion) {
         })
     });
 
+    #[cfg(feature = "nalgebra")]
     c.bench_function("csc-from-dense", |bencher| {
         bencher.iter(|| {
             let mat = symmetric_tridiagonal(black_box(&a), black_box(&b)).unwrap();
@@ -31,6 +33,7 @@ fn criterion_benchmark(c: &mut Criterion) {
         })
     });
 
+    #[cfg(feature = "nalgebra")]
     c.bench_function("csr-from-dense", |bencher| {
         bencher.iter(|| {
             let mat = symmetric_tridiagonal(black_box(&a), black_box(&b)).unwrap();
