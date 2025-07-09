@@ -1,15 +1,42 @@
-[package]
-name = "iterative-solvers"
+[workspace]
+resolver = "3"
+members = [".", "py-iterative-solvers"]
+
+[workspace.package]
 authors = ["Xiangong Tang <tangxiangong@gmail.com>"]
 edition = "2024"
 version = "0.2.1"
-description = "Iterative algorithms for solving linear systems"
 license = "MIT OR Apache-2.0"
+
+[workspace.dependencies]
+thiserror = "2"
+# "extension-module" tells pyo3 we want to build an extension module (skips linking against libpython.so)
+# "abi3-py39" tells pyo3 (and maturin) to build using the stable ABI with minimum Python version 3.9
+pyo3 = { version = "0.25", features = ["extension-module", "abi3-py39"] }
+# nalgebra backend, default
+nalgebra = "0.33"
+nalgebra-sparse = "0.10"
+# faer backend
+faer = "0.22"
+# ndarray backend
+ndarray = { version = "0.16", features = ["rayon", "matrixmultiply-threading"] }
+ndarray-linalg = "0.17"
+numpy = "0.25"
+
+iterative-solvers = { path = "." }
+
+[package]
+name = "iterative-solvers"
+authors = { workspace = true }
+edition = { workspace = true }
+version = { workspace = true }
+license = { workspace = true }
+description = "Iterative algorithms for solving linear systems"
 repository = "https://github.com/tangxiangong/iterative-solvers"
 readme = "README.md"
 categories = ["mathematics"]
 keywords = ["numerical-algorithm", "math", "cg"]
-exclude = ["julia-bench"]
+exclude = ["julia-bench", "py-iterative-solvers"]
 
 # docs.rs 配置
 [package.metadata.docs.rs]
@@ -29,21 +56,27 @@ panic = "abort"
 default = ["nalgebra"]
 nalgebra = ["dep:nalgebra", "dep:nalgebra-sparse"]
 faer = ["dep:faer"]
+ndarray = ["dep:ndarray", "dep:ndarray-linalg"]
 
 [dependencies]
-thiserror = "2.0.12"
+thiserror = { workspace = true }
 
 # nalgebra backend, default
-nalgebra = { version = "0.33", optional = true }
-nalgebra-sparse = { version = "0.10.0", optional = true }
+nalgebra = { workspace = true, optional = true }
+nalgebra-sparse = { workspace = true, optional = true }
 
 # faer backend
-faer = { version = "0.22.6", optional = true }
+faer = { workspace = true, optional = true }
+
+# ndarray backend
+ndarray = { workspace = true, optional = true }
+ndarray-linalg = { workspace = true, optional = true }
 
 [dev-dependencies]
 criterion = "0.6.0"
-nalgebra = "0.33"
-nalgebra-sparse = "0.10"
+nalgebra = { workspace = true }
+nalgebra-sparse = { workspace = true }
+faer = { workspace = true }
 
 [[bench]]
 name = "diagm"
