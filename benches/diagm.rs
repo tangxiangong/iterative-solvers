@@ -3,8 +3,6 @@ use iterative_solvers::utils::{
     dense::symmetric_tridiagonal,
     sparse::{symmetric_tridiagonal_csc, symmetric_tridiagonal_csr},
 };
-#[cfg(feature = "nalgebra")]
-use nalgebra_sparse::{CscMatrix, CsrMatrix};
 use std::hint::black_box;
 
 fn criterion_benchmark(c: &mut Criterion) {
@@ -13,35 +11,19 @@ fn criterion_benchmark(c: &mut Criterion) {
     let a = vec![2.0 / (h * h); n - 1];
     let b = vec![-1.0 / (h * h); n - 2];
 
-    c.bench_function("dense", |bencher| {
+    c.bench_function("diagm-dense", |bencher| {
         bencher.iter(|| {
             symmetric_tridiagonal(black_box(&a), black_box(&b)).unwrap();
         })
     });
 
-    #[cfg(feature = "nalgebra")]
-    c.bench_function("csc-from-dense", |bencher| {
-        bencher.iter(|| {
-            let mat = symmetric_tridiagonal(black_box(&a), black_box(&b)).unwrap();
-            let _ = CscMatrix::from(&mat);
-        })
-    });
-
-    c.bench_function("csc", |bencher| {
+    c.bench_function("diagm-csc", |bencher| {
         bencher.iter(|| {
             symmetric_tridiagonal_csc(black_box(&a), black_box(&b)).unwrap();
         })
     });
 
-    #[cfg(feature = "nalgebra")]
-    c.bench_function("csr-from-dense", |bencher| {
-        bencher.iter(|| {
-            let mat = symmetric_tridiagonal(black_box(&a), black_box(&b)).unwrap();
-            let _ = CsrMatrix::from(&mat);
-        })
-    });
-
-    c.bench_function("csr", |bencher| {
+    c.bench_function("diagm-csr", |bencher| {
         bencher.iter(|| {
             symmetric_tridiagonal_csr(black_box(&a), black_box(&b)).unwrap();
         })
