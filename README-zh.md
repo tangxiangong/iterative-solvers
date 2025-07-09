@@ -2,7 +2,7 @@
 
 [English](README.md) | 简体中文
 
-本库提供了数值线性代数中迭代算法的 Rust 实现，深受 Julia 包 [IterativeSolvers.jl](https://github.com/JuliaLinearAlgebra/IterativeSolvers.jl) 的启发。
+数值线性代数迭代算法的 Rust 实现
 
 [![文档](https://img.shields.io/badge/文档-最新-blue.svg)](https://docs.rs/iterative-solvers/latest/iterative_solvers/)
 [![crates.io](https://img.shields.io/crates/v/iterative-solvers.svg)](https://crates.io/crates/iterative-solvers)
@@ -105,6 +105,11 @@ while let Some(residual) = solver.next() {
 let e = (solution - solver.solution()).norm();
 println!("error: {}", e);
 ```
+
+## 致谢
+
+本库是基于 Julia 包 [IterativeSolvers.jl](https://github.com/JuliaLinearAlgebra/IterativeSolvers.jl) 的 Rust 实现，该包的许可协议为 [MIT License](https://github.com/JuliaLinearAlgebra/IterativeSolvers.jl/blob/master/LICENSE)。
+
 
 ## 许可协议
 

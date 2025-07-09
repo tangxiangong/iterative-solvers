@@ -1,8 +1,17 @@
 //! Minimal Residual method (MINRES).
+//!
+//! # Copyright
+//!
+//! Portions of this implementation are derived from [IterativeSolvers.jl](https://github.com/JuliaLinearAlgebra/IterativeSolvers.jl).
+//!
+//! Copyright (c) 2013--2016 The Julia Language.
+//!
+//! Licensed under the MIT License.
+
 #![allow(dead_code)]
 
-use nalgebra::DVector;
 use crate::MatrixOp;
+use nalgebra::DVector;
 
 /// Minimal Residual method
 pub struct MINRES<'mat, Mat: MatrixOp> {

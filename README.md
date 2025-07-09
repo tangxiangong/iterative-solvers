@@ -2,7 +2,7 @@
 
 English | [简体中文](README-zh.md)
 
-This library provides Rust implementations of iterative algorithms for solving linear system, drawing heavy inspiration from the Julia package [IterativeSolvers.jl](https://github.com/JuliaLinearAlgebra/IterativeSolvers.jl).
+Rust implementations of iterative algorithms for solving linear systems.
 
 [![docs.rs](https://img.shields.io/badge/docs.rs-latest-blue.svg)](https://docs.rs/iterative-solvers/latest/iterative_solvers/)
 [![crates.io](https://img.shields.io/crates/v/iterative-solvers.svg)](https://crates.io/crates/iterative-solvers)
@@ -102,6 +102,10 @@ while let Some(residual) = solver.next() {
 let e = (solution - solver.solution()).norm();
 println!("error: {}", e);
 ```
+
+## Acknowledgments
+
+This library is a Rust implementation based on the Julia package [IterativeSolvers.jl](https://github.com/JuliaLinearAlgebra/IterativeSolvers.jl), which is licensed under the [MIT License](https://github.com/JuliaLinearAlgebra/IterativeSolvers.jl/blob/master/LICENSE).
 
 ## License
 

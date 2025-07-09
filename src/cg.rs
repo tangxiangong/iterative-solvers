@@ -1,4 +1,12 @@
 //! Conjugate Gradient (CG) method.
+//!
+//! # Copyright
+//!
+//! Portions of this implementation are derived from [IterativeSolvers.jl](https://github.com/JuliaLinearAlgebra/IterativeSolvers.jl).
+//!
+//! Copyright (c) 2013--2016 The Julia Language.
+//!
+//! Licensed under the MIT License.
 
 use std::ops::Mul;
 
