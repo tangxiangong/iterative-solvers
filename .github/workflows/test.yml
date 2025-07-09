@@ -10,6 +10,7 @@ on:
       - '.cargo/**'
       - '!**/*.md'
       - '!docs/**'
+      - '!py-iterative-solvers/**'
   pull_request:
     branches: [ "dev", "stable" ]
     paths:
@@ -19,6 +20,7 @@ on:
       - '.cargo/**'
       - '!**/*.md'
       - '!docs/**'
+      - '!py-iterative-solvers/**'
 
 env:
   CARGO_TERM_COLOR: always
@@ -34,7 +36,11 @@ jobs:
       run: |
         sudo apt update
         sudo apt install -y pkg-config libfreetype6-dev libfontconfig1-dev
-    - name: Build
-      run: cargo build --verbose
-    - name: Run tests
-      run: cargo test --verbose
+    - name: Build nalgebra
+      run: cargo build --verbose --no-default-features --features nalgebra
+    - name: Build faer
+      run: cargo build --verbose --no-default-features --features faer
+    - name: Run tests nalgebra
+      run: cargo test --verbose --no-default-features --features nalgebra
+    - name: Run tests faer
+      run: cargo test --verbose --no-default-features --features faer
