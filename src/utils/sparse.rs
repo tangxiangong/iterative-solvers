@@ -3,6 +3,7 @@
 use crate::{
     IterSolverError, IterSolverResult,
     ops::{SparseCscMatrix, SparseCsrMatrix},
+    utils::{empty_spcsc, empty_spcsr},
 };
 
 #[cfg(feature = "nalgebra")]
@@ -53,14 +54,7 @@ use faer::sparse::Triplet;
 /// ```
 pub fn diagm_csr(data: &[f64], offset: i32) -> SparseCsrMatrix<f64> {
     if data.is_empty() {
-        #[cfg(feature = "nalgebra")]
-        {
-            return SparseCsrMatrix::zeros(0, 0);
-        }
-        #[cfg(feature = "faer")]
-        {
-            return SparseCsrMatrix::try_new_from_triplets(0, 0, &[]).unwrap();
-        }
+        return empty_spcsr();
     }
 
     let offset_usize = offset.unsigned_abs() as usize;
@@ -280,14 +274,7 @@ pub fn symmetric_tridiagonal_csr(
 /// ```
 pub fn diagm_csc(data: &[f64], offset: i32) -> SparseCscMatrix<f64> {
     if data.is_empty() {
-        #[cfg(feature = "nalgebra")]
-        {
-            return SparseCscMatrix::zeros(0, 0);
-        }
-        #[cfg(feature = "faer")]
-        {
-            return SparseCscMatrix::try_new_from_triplets(0, 0, &[]).unwrap();
-        }
+        return empty_spcsc();
     }
 
     let offset_usize = offset.unsigned_abs() as usize;
