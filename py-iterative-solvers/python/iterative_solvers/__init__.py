@@ -1,8 +1,3 @@
-from iterative_solvers._core import hello_from_bin, PyCSRMatrix, cg_solver
+from . import cg
 
-
-def main() -> None:
-    print(hello_from_bin())
-
-
-__all__ = ["hello_from_bin", "PyCSRMatrix", "cg_solver", "main"]
+__all__ = ["cg"]

@@ -1,7 +1,5 @@
 import numpy
 
-def hello_from_bin() -> str: ...
-
 class PyCSRMatrix:
     data: numpy.ndarray
     indices: numpy.ndarray
@@ -22,4 +20,4 @@ def cg_solver(
     x0: numpy.ndarray,
     abstol: float,
     reltol: float,
-) -> numpy.ndarray: ...
+) -> numpy.ndarray[tuple[int], numpy.dtype[numpy.float64]]: ...
