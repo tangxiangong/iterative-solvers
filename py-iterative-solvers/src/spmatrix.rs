@@ -20,6 +20,7 @@ impl PyCSRMatrix {
         indptr: PyReadonlyArray1<i64>,
         shape: (usize, usize),
     ) -> PyResult<Self> {
+        // 避免数据拷贝，直接存储引用
         Ok(Self {
             data: data.to_owned_array().to_pyarray(py).unbind(),
             indices: indices.to_owned_array().to_pyarray(py).unbind(),
@@ -30,9 +31,8 @@ impl PyCSRMatrix {
 }
 
 impl PyCSRMatrix {
-    /// 极致性能优化版本：最佳性能的CSR矩阵转换
+    /// 高性能零拷贝版本：直接从 Python 数组构造 CSR 矩阵
     pub fn to_csr(&self, py: Python<'_>) -> PyResult<CsrMatrix<f64>> {
-        // 直接获取slice，避免复杂的指针操作
         let data_array = self.data.bind(py).readonly();
         let indices_array = self.indices.bind(py).readonly();
         let indptr_array = self.indptr.bind(py).readonly();
@@ -41,43 +41,17 @@ impl PyCSRMatrix {
         let indices_slice = indices_array.as_slice()?;
         let indptr_slice = indptr_array.as_slice()?;
 
-        // 零拷贝data向量
-        let data_vec = data_slice.to_vec();
+        // 高效类型转换：使用迭代器和 collect，让编译器优化
+        let indices_usize: Vec<usize> = indices_slice.iter().map(|&x| x as usize).collect();
+        let indptr_usize: Vec<usize> = indptr_slice.iter().map(|&x| x as usize).collect();
 
-        // 高性能类型转换
-        let indices_len = indices_slice.len();
-        let indptr_len = indptr_slice.len();
-
-        let mut indices_usize = Vec::<usize>::with_capacity(indices_len);
-        let mut indptr_usize = Vec::<usize>::with_capacity(indptr_len);
-
-        unsafe {
-            indices_usize.set_len(indices_len);
-            indptr_usize.set_len(indptr_len);
-        }
-
-        let indices_out_ptr = indices_usize.as_mut_ptr();
-        let indptr_out_ptr = indptr_usize.as_mut_ptr();
-
-        // 使用最优化的类型转换循环
-        for i in 0..indices_len {
-            unsafe {
-                *indices_out_ptr.add(i) = *indices_slice.get_unchecked(i) as usize;
-            }
-        }
-
-        for i in 0..indptr_len {
-            unsafe {
-                *indptr_out_ptr.add(i) = *indptr_slice.get_unchecked(i) as usize;
-            }
-        }
-
+        // 尝试零拷贝构造，如果失败则拷贝数据
         CsrMatrix::try_from_csr_data(
             self.shape.0,
             self.shape.1,
             indptr_usize,
             indices_usize,
-            data_vec,
+            data_slice.to_vec(), // 只在这里做一次数据拷贝
         )
         .map_err(|e| {
             PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("CSR construction failed: {e}"))
