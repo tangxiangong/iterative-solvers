@@ -31,40 +31,40 @@ fn criterion_benchmark(c: &mut Criterion) {
 
     c.bench_function("cg-dense", |b| {
         b.iter(|| {
-            let mut solver = CG::new(
+            let solver = CG::new(
                 black_box(&mat),
                 black_box(&rhs),
                 black_box(abstol),
                 black_box(reltol),
             )
             .unwrap();
-            let _ = solver.next();
+            let _ = solver.solve();
         })
     });
 
     c.bench_function("cg-csc", |b| {
         b.iter(|| {
-            let mut solver = CG::new(
+            let solver = CG::new(
                 black_box(&mat_csc),
                 black_box(&rhs),
                 black_box(abstol),
                 black_box(reltol),
             )
             .unwrap();
-            let _ = solver.next();
+            let _ = solver.solve();
         })
     });
 
     c.bench_function("cg-csr", |b| {
         b.iter(|| {
-            let mut solver = CG::new(
+            let solver = CG::new(
                 black_box(&mat_csr),
                 black_box(&rhs),
                 black_box(abstol),
                 black_box(reltol),
             )
             .unwrap();
-            let _ = solver.next();
+            let _ = solver.solve();
         })
     });
 }
