@@ -14,3 +14,5 @@ crate-type = ["cdylib"]
 pyo3 = { workspace = true }
 iterative-solvers = { workspace = true }
 numpy = { workspace = true }
+nalgebra = { workspace = true }
+nalgebra-sparse = { workspace = true }
