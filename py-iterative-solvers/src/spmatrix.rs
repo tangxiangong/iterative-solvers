@@ -29,38 +29,58 @@ impl PyCSRMatrix {
     }
 }
 
-impl TryFrom<&PyCSRMatrix> for CsrMatrix<f64> {
-    type Error = PyErr;
+impl PyCSRMatrix {
+    /// 极致性能优化版本：最佳性能的CSR矩阵转换
+    pub fn to_csr(&self, py: Python<'_>) -> PyResult<CsrMatrix<f64>> {
+        // 直接获取slice，避免复杂的指针操作
+        let data_array = self.data.bind(py).readonly();
+        let indices_array = self.indices.bind(py).readonly();
+        let indptr_array = self.indptr.bind(py).readonly();
 
-    fn try_from(mat: &PyCSRMatrix) -> Result<Self, Self::Error> {
-        let (data_vec, indices_vec, indptr_vec, shape) = Python::with_gil(|py| {
-            let data_array = mat.data.bind(py);
-            let indices_array = mat.indices.bind(py);
-            let indptr_array = mat.indptr.bind(py);
+        let data_slice = data_array.as_slice()?;
+        let indices_slice = indices_array.as_slice()?;
+        let indptr_slice = indptr_array.as_slice()?;
 
-            let data = data_array.readonly();
-            let indices = indices_array.readonly();
-            let indptr = indptr_array.readonly();
+        // 零拷贝data向量
+        let data_vec = data_slice.to_vec();
 
-            Ok::<_, PyErr>((
-                data.as_slice()?.to_vec(),
-                indices.as_slice()?.to_vec(),
-                indptr.as_slice()?.to_vec(),
-                mat.shape,
-            ))
-        })?;
+        // 高性能类型转换
+        let indices_len = indices_slice.len();
+        let indptr_len = indptr_slice.len();
 
-        let indices_usize: Vec<usize> = indices_vec.iter().map(|&x| x as usize).collect();
-        let indptr_usize: Vec<usize> = indptr_vec.iter().map(|&x| x as usize).collect();
+        let mut indices_usize = Vec::<usize>::with_capacity(indices_len);
+        let mut indptr_usize = Vec::<usize>::with_capacity(indptr_len);
 
-        let csr_matrix =
-            CsrMatrix::try_from_csr_data(shape.0, shape.1, indptr_usize, indices_usize, data_vec)
-                .map_err(|e| {
-                PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
-                    "Failed to create CSR matrix: {e}"
-                ))
-            })?;
+        unsafe {
+            indices_usize.set_len(indices_len);
+            indptr_usize.set_len(indptr_len);
+        }
 
-        Ok(csr_matrix)
+        let indices_out_ptr = indices_usize.as_mut_ptr();
+        let indptr_out_ptr = indptr_usize.as_mut_ptr();
+
+        // 使用最优化的类型转换循环
+        for i in 0..indices_len {
+            unsafe {
+                *indices_out_ptr.add(i) = *indices_slice.get_unchecked(i) as usize;
+            }
+        }
+
+        for i in 0..indptr_len {
+            unsafe {
+                *indptr_out_ptr.add(i) = *indptr_slice.get_unchecked(i) as usize;
+            }
+        }
+
+        CsrMatrix::try_from_csr_data(
+            self.shape.0,
+            self.shape.1,
+            indptr_usize,
+            indices_usize,
+            data_vec,
+        )
+        .map_err(|e| {
+            PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("CSR construction failed: {e}"))
+        })
     }
 }
