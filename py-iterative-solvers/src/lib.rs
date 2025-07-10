@@ -1,5 +1,10 @@
 use pyo3::prelude::*;
 
+mod spmatrix;
+use spmatrix::PyCSRMatrix;
+mod cg;
+use cg::cg_solver;
+
 #[pyfunction]
 fn hello_from_bin() -> String {
     "Hello from py-iterative-solvers!".to_string()
@@ -11,5 +16,7 @@ fn hello_from_bin() -> String {
 #[pymodule]
 fn _core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(hello_from_bin, m)?)?;
+    m.add_class::<PyCSRMatrix>()?;
+    m.add_function(wrap_pyfunction!(cg_solver, m)?)?;
     Ok(())
 }
