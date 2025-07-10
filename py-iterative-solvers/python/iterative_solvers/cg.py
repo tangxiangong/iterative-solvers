@@ -16,9 +16,13 @@ def cg(
 ):
     if initial_guess is None:
         initial_guess = np.zeros_like(rhs)
+
+    # 确保数据类型正确
+    data = mat.data.astype(np.float64)
     indices = mat.indices.astype(np.int64)
     indptr = mat.indptr.astype(np.int64)
-    data = mat.data.astype(np.float64)
-    shape = mat.shape
-    mat_ = PyCSRMatrix(data, indices, indptr, shape)  # type: ignore
+    shape: tuple[int, int] = mat.shape  # type: ignore
+
+    # 创建优化的 PyCSRMatrix 对象并调用求解器
+    mat_ = PyCSRMatrix(data, indices, indptr, shape)
     return cg_solver(mat_, rhs, initial_guess, abstol, reltol)
