@@ -1,1 +1,5 @@
 **/*.so
+**/*.py[cod]
+**/__pycache__
+test.py
+uv.lock
