@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.sparse as sp
 
-Mat = np.ndarray[tuple[int, int], np.dtype[np.float64]] | sp.csr_matrix | sp.csc_matrix
+Mat = np.ndarray[tuple[int, int], np.dtype[np.float64]] | sp.csr_array | sp.csc_array
 
 Vec = np.ndarray[tuple[int], np.dtype[np.float64]]
 
@@ -243,12 +243,8 @@ if __name__ == "__main__":
     b = [-1.0 / (h * h)] * (n - 2)
     mat = np.diag(a) + np.diag(b, k=1) + np.diag(b, k=-1)
     rhs = np.array([np.pi**2 * np.sin(i * h * np.pi) for i in range(1, n)])
-    mat = sp.csr_matrix(mat)
-    cg_solver = CG(mat, rhs)
-    import time
-
-    start = time.time()
-    for iteration, residual, _ in cg_solver:
-        print(f"Iteration: {iteration}, Residual: {residual}")
-    end = time.time()
-    print(f"Time: {(end - start) * 1000 * 1000} μs")
+    mat = sp.csr_array(mat)
+    _, solution = cg(mat, rhs)
+    accurate_sol = np.sin(np.arange(1, n) * h * np.pi)
+    err = np.linalg.norm(solution - accurate_sol)
+    print(err)
