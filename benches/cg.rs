@@ -9,8 +9,8 @@ use iterative_solvers::{
 use std::{f64::consts::PI, hint::black_box};
 
 fn criterion_benchmark(c: &mut Criterion) {
-    let n = 1024;
-    let h = 1.0 / 1024.0;
+    let n = 1024 * 8;
+    let h = 1.0 / (n as f64);
     let a = vec![2.0 / (h * h); n - 1];
     let b = vec![-1.0 / (h * h); n - 2];
     let mat = symmetric_tridiagonal(&a, &b).unwrap();
