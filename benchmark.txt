@@ -1,5 +1,6 @@
 === nalgebra backend ===
-    Finished `bench` profile [optimized] target(s) in 0.09s
+   Compiling iterative-solvers v0.2.1 (/Users/xiaoyu/Projects/iterative-solvers)
+    Finished `bench` profile [optimized] target(s) in 12.46s
      Running unittests src/lib.rs (target/release/deps/iterative_solvers-6737b10fb9d27cca)
 
 running 8 tests
@@ -18,78 +19,64 @@ test result: ok. 0 passed; 0 failed; 8 ignored; 0 measured; 0 filtered out; fini
 Gnuplot not found, using plotters backend
 Benchmarking cg-dense
 Benchmarking cg-dense: Warming up for 3.0000 s
-Benchmarking cg-dense: Collecting 100 samples in estimated 5.1708 s (35k iterations)
+Benchmarking cg-dense: Collecting 100 samples in estimated 5.7069 s (500 iterations)
 Benchmarking cg-dense: Analyzing
-cg-dense                time:   [146.54 µs 146.76 µs 146.97 µs]
-                        change: [−4.5397% −4.3367% −4.1822%] (p = 0.00 < 0.05)
-                        Performance has improved.
-Found 14 outliers among 100 measurements (14.00%)
-  6 (6.00%) high mild
-  8 (8.00%) high severe
+cg-dense                time:   [11.923 ms 11.928 ms 11.933 ms]
+                        change: [+6507.5% +7231.5% +7728.0%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) high mild
 
 Benchmarking cg-csc
 Benchmarking cg-csc: Warming up for 3.0000 s
-Benchmarking cg-csc: Collecting 100 samples in estimated 5.0131 s (778k iterations)
+Benchmarking cg-csc: Collecting 100 samples in estimated 5.2561 s (96k iterations)
 Benchmarking cg-csc: Analyzing
-cg-csc                  time:   [6.4611 µs 6.4664 µs 6.4715 µs]
-                        change: [+17.450% +17.751% +18.033%] (p = 0.00 < 0.05)
+cg-csc                  time:   [53.948 µs 54.027 µs 54.090 µs]
+                        change: [+723.58% +725.23% +726.75%] (p = 0.00 < 0.05)
                         Performance has regressed.
-Found 3 outliers among 100 measurements (3.00%)
-  2 (2.00%) high mild
-  1 (1.00%) high severe
+Found 22 outliers among 100 measurements (22.00%)
+  22 (22.00%) low severe
 
 Benchmarking cg-csr
 Benchmarking cg-csr: Warming up for 3.0000 s
-Benchmarking cg-csr: Collecting 100 samples in estimated 5.0080 s (1.4M iterations)
+Benchmarking cg-csr: Collecting 100 samples in estimated 5.0471 s (157k iterations)
 Benchmarking cg-csr: Analyzing
-cg-csr                  time:   [3.4503 µs 3.4523 µs 3.4548 µs]
-                        change: [−74.335% −74.266% −74.200%] (p = 0.00 < 0.05)
-                        Performance has improved.
-Found 8 outliers among 100 measurements (8.00%)
-  5 (5.00%) low mild
-  1 (1.00%) high mild
-  2 (2.00%) high severe
+cg-csr                  time:   [31.827 µs 31.836 µs 31.847 µs]
+                        change: [+762.37% +782.89% +794.92%] (p = 0.00 < 0.05)
+                        Performance has regressed.
 
      Running benches/diagm.rs (target/release/deps/diagm-2732183ce2ed89c3)
 Gnuplot not found, using plotters backend
-Benchmarking dense
-Benchmarking dense: Warming up for 3.0000 s
+Benchmarking diagm-dense
+Benchmarking diagm-dense: Warming up for 3.0000 s
 
-Warning: Unable to complete 100 samples in 5.0s. You may wish to increase target time to 16.7s, or reduce sample count to 30.
-Benchmarking dense: Collecting 100 samples in estimated 16.657 s (100 iterations)
-Benchmarking dense: Analyzing
-dense                   time:   [167.84 ms 169.38 ms 171.43 ms]
-                        change: [−29.553% −28.878% −27.958%] (p = 0.00 < 0.05)
+Warning: Unable to complete 100 samples in 5.0s. You may wish to increase target time to 16.9s, or reduce sample count to 20.
+Benchmarking diagm-dense: Collecting 100 samples in estimated 16.861 s (100 iterations)
+Benchmarking diagm-dense: Analyzing
+diagm-dense             time:   [164.41 ms 164.91 ms 165.42 ms]
+                        change: [−9.9531% −9.5953% −9.2356%] (p = 0.00 < 0.05)
                         Performance has improved.
-Found 6 outliers among 100 measurements (6.00%)
-  3 (3.00%) high mild
-  3 (3.00%) high severe
 
-Benchmarking csc
-Benchmarking csc: Warming up for 3.0000 s
-Benchmarking csc: Collecting 100 samples in estimated 6.9094 s (15k iterations)
-Benchmarking csc: Analyzing
-csc                     time:   [458.94 µs 464.02 µs 473.41 µs]
-                        change: [+42.814% +43.703% +45.025%] (p = 0.00 < 0.05)
-                        Performance has regressed.
-Found 1 outliers among 100 measurements (1.00%)
-  1 (1.00%) high severe
+Benchmarking diagm-csc
+Benchmarking diagm-csc: Warming up for 3.0000 s
+Benchmarking diagm-csc: Collecting 100 samples in estimated 6.8997 s (15k iterations)
+Benchmarking diagm-csc: Analyzing
+diagm-csc               time:   [453.63 µs 454.16 µs 454.58 µs]
+                        change: [−4.2452% −3.8450% −3.4538%] (p = 0.00 < 0.05)
+                        Performance has improved.
 
-Benchmarking csr
-Benchmarking csr: Warming up for 3.0000 s
-Benchmarking csr: Collecting 100 samples in estimated 6.9673 s (15k iterations)
-Benchmarking csr: Analyzing
-csr                     time:   [456.28 µs 459.49 µs 465.55 µs]
-                        change: [+39.091% +40.101% +41.520%] (p = 0.00 < 0.05)
-                        Performance has regressed.
-Found 3 outliers among 100 measurements (3.00%)
-  1 (1.00%) low mild
-  1 (1.00%) high mild
-  1 (1.00%) high severe
+Benchmarking diagm-csr
+Benchmarking diagm-csr: Warming up for 3.0000 s
+Benchmarking diagm-csr: Collecting 100 samples in estimated 6.8202 s (15k iterations)
+Benchmarking diagm-csr: Analyzing
+diagm-csr               time:   [438.84 µs 440.16 µs 441.82 µs]
+                        change: [−5.7451% −4.6753% −3.9333%] (p = 0.00 < 0.05)
+                        Performance has improved.
 
 -e
 === faer backend ===
-    Finished `bench` profile [optimized] target(s) in 0.16s
+   Compiling iterative-solvers v0.2.1 (/Users/xiaoyu/Projects/iterative-solvers)
+    Finished `bench` profile [optimized] target(s) in 15.94s
      Running unittests src/lib.rs (target/release/deps/iterative_solvers-4b08111c1817fc8e)
 
 running 8 tests
@@ -108,72 +95,65 @@ test result: ok. 0 passed; 0 failed; 8 ignored; 0 measured; 0 filtered out; fini
 Gnuplot not found, using plotters backend
 Benchmarking cg-dense
 Benchmarking cg-dense: Warming up for 3.0000 s
-Benchmarking cg-dense: Collecting 100 samples in estimated 5.4293 s (35k iterations)
+Benchmarking cg-dense: Collecting 100 samples in estimated 5.8665 s (500 iterations)
 Benchmarking cg-dense: Analyzing
-cg-dense                time:   [153.05 µs 153.08 µs 153.11 µs]
-                        change: [+4.4012% +4.5245% +4.6376%] (p = 0.00 < 0.05)
-                        Performance has regressed.
-Found 12 outliers among 100 measurements (12.00%)
-  1 (1.00%) low mild
-  6 (6.00%) high mild
-  5 (5.00%) high severe
+cg-dense                time:   [11.538 ms 11.545 ms 11.553 ms]
+                        change: [−3.2864% −3.2121% −3.1373%] (p = 0.00 < 0.05)
+                        Performance has improved.
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) high severe
 
 Benchmarking cg-csc
 Benchmarking cg-csc: Warming up for 3.0000 s
-Benchmarking cg-csc: Collecting 100 samples in estimated 5.0044 s (899k iterations)
+Benchmarking cg-csc: Collecting 100 samples in estimated 5.1258 s (111k iterations)
 Benchmarking cg-csc: Analyzing
-cg-csc                  time:   [5.5215 µs 5.5416 µs 5.5672 µs]
-                        change: [−13.729% −10.932% −6.5549%] (p = 0.00 < 0.05)
+cg-csc                  time:   [48.178 µs 48.502 µs 48.804 µs]
+                        change: [−11.211% −10.645% −10.056%] (p = 0.00 < 0.05)
                         Performance has improved.
-Found 7 outliers among 100 measurements (7.00%)
-  2 (2.00%) high mild
-  5 (5.00%) high severe
+Found 5 outliers among 100 measurements (5.00%)
+  5 (5.00%) low mild
 
 Benchmarking cg-csr
 Benchmarking cg-csr: Warming up for 3.0000 s
-Benchmarking cg-csr: Collecting 100 samples in estimated 5.0090 s (343k iterations)
+Benchmarking cg-csr: Collecting 100 samples in estimated 5.1118 s (45k iterations)
 Benchmarking cg-csr: Analyzing
-cg-csr                  time:   [13.998 µs 14.285 µs 14.694 µs]
-                        change: [+308.28% +316.10% +325.88%] (p = 0.00 < 0.05)
+cg-csr                  time:   [111.68 µs 112.81 µs 114.39 µs]
+                        change: [+245.83% +247.56% +249.49%] (p = 0.00 < 0.05)
                         Performance has regressed.
-Found 8 outliers among 100 measurements (8.00%)
-  2 (2.00%) low mild
-  2 (2.00%) high mild
-  4 (4.00%) high severe
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) high severe
 
      Running benches/diagm.rs (target/release/deps/diagm-530d6be2c3ad491c)
 Gnuplot not found, using plotters backend
-Benchmarking dense
-Benchmarking dense: Warming up for 3.0000 s
+Benchmarking diagm-dense
+Benchmarking diagm-dense: Warming up for 3.0000 s
 
-Warning: Unable to complete 100 samples in 5.0s. You may wish to increase target time to 25.9s, or reduce sample count to 10.
-Benchmarking dense: Collecting 100 samples in estimated 25.913 s (100 iterations)
-Benchmarking dense: Analyzing
-dense                   time:   [247.19 ms 249.90 ms 252.91 ms]
-                        change: [+45.265% +47.534% +49.952%] (p = 0.00 < 0.05)
+Warning: Unable to complete 100 samples in 5.0s. You may wish to increase target time to 24.3s, or reduce sample count to 20.
+Benchmarking diagm-dense: Collecting 100 samples in estimated 24.312 s (100 iterations)
+Benchmarking diagm-dense: Analyzing
+diagm-dense             time:   [239.36 ms 240.70 ms 242.18 ms]
+                        change: [+44.999% +45.964% +46.919%] (p = 0.00 < 0.05)
                         Performance has regressed.
-Found 7 outliers among 100 measurements (7.00%)
-  2 (2.00%) high mild
-  5 (5.00%) high severe
-
-Benchmarking csc
-Benchmarking csc: Warming up for 3.0000 s
-Benchmarking csc: Collecting 100 samples in estimated 6.6075 s (20k iterations)
-Benchmarking csc: Analyzing
-csc                     time:   [323.59 µs 329.18 µs 337.42 µs]
-                        change: [−30.030% −29.080% −28.046%] (p = 0.00 < 0.05)
-                        Performance has improved.
-Found 7 outliers among 100 measurements (7.00%)
-  4 (4.00%) low mild
+Found 2 outliers among 100 measurements (2.00%)
   1 (1.00%) high mild
-  2 (2.00%) high severe
+  1 (1.00%) high severe
 
-Benchmarking csr
-Benchmarking csr: Warming up for 3.0000 s
-Benchmarking csr: Collecting 100 samples in estimated 5.0391 s (15k iterations)
-Benchmarking csr: Analyzing
-csr                     time:   [330.93 µs 334.06 µs 340.45 µs]
-                        change: [−28.371% −27.427% −26.435%] (p = 0.00 < 0.05)
+Benchmarking diagm-csc
+Benchmarking diagm-csc: Warming up for 3.0000 s
+Benchmarking diagm-csc: Collecting 100 samples in estimated 6.6436 s (20k iterations)
+Benchmarking diagm-csc: Analyzing
+diagm-csc               time:   [325.60 µs 327.28 µs 329.82 µs]
+                        change: [−27.367% −26.967% −26.474%] (p = 0.00 < 0.05)
+                        Performance has improved.
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) high severe
+
+Benchmarking diagm-csr
+Benchmarking diagm-csr: Warming up for 3.0000 s
+Benchmarking diagm-csr: Collecting 100 samples in estimated 5.0183 s (15k iterations)
+Benchmarking diagm-csr: Analyzing
+diagm-csr               time:   [329.95 µs 331.36 µs 333.71 µs]
+                        change: [−25.581% −24.846% −23.687%] (p = 0.00 < 0.05)
                         Performance has improved.
 Found 4 outliers among 100 measurements (4.00%)
   3 (3.00%) high mild
