@@ -43,7 +43,7 @@ use crate::{
 /// // [0.0, 0.0, 0.0, 3.0]
 /// // [0.0, 0.0, 0.0, 0.0]
 /// ```
-pub fn diagm(data: &[f64], offset: i32) -> Matrix<f64> {
+pub fn diagm(data: &[f64], offset: isize) -> Matrix<f64> {
     if data.is_empty() {
         #[cfg(feature = "ndarray")]
         {
@@ -57,7 +57,7 @@ pub fn diagm(data: &[f64], offset: i32) -> Matrix<f64> {
     match offset {
         0 => from_diagonal(data),
         offset => {
-            let offset_usize = offset.unsigned_abs() as usize;
+            let offset_usize = offset.unsigned_abs();
             let n = data.len() + offset_usize;
             let mut mat = {
                 #[cfg(feature = "ndarray")]
@@ -190,6 +190,73 @@ pub fn symmetric_tridiagonal(
     sub_diagonal: &[f64],
 ) -> IterSolverResult<Matrix<f64>> {
     tridiagonal(diagonal, sub_diagonal, sub_diagonal)
+}
+
+/// Creates a diagonal matrix from a list of diagonals and their offsets.
+///
+/// # Arguments
+///
+/// * `diagonals` - A vector of vectors, where each inner vector contains the diagonal elements
+/// * `offsets` - A vector of offsets for each diagonal
+///
+/// # Examples
+///
+/// ```rust
+/// use iterative_solvers::utils::dense::diags;
+///
+/// let diagonals = vec![vec![1.0, 2.0, 3.0], vec![4.0, 5.0], vec![6.0]];
+/// let offsets = vec![0, 1, 2];
+///
+/// let result = diags(diagonals, offsets);
+/// // Creates:
+/// // [1.0, 4.0, 6.0]
+/// // [0.0, 2.0, 5.0]
+/// // [0.0, 0.0, 3.0]
+/// ```
+pub fn diags(diagonals: Vec<Vec<f64>>, offsets: Vec<isize>) -> IterSolverResult<Matrix<f64>> {
+    if diagonals.len() != offsets.len() {
+        return Err(IterSolverError::DimensionError(format!(
+            "The length of `diagonals` {} and `offsets` {} do not match",
+            diagonals.len(),
+            offsets.len()
+        )));
+    }
+    if diagonals.is_empty() {
+        #[cfg(feature = "ndarray")]
+        {
+            return Ok(Matrix::zeros((0, 0)));
+        }
+        #[cfg(not(feature = "ndarray"))]
+        {
+            return Ok(Matrix::zeros(0, 0));
+        }
+    }
+
+    // Check for duplicate offsets
+    let n = diagonals[0].len() + offsets[0].unsigned_abs();
+    let mut unique_offsets = std::collections::HashSet::new();
+    for (index, (diag, offset)) in diagonals.iter().zip(offsets.iter()).enumerate() {
+        if !unique_offsets.insert(*offset) {
+            return Err(IterSolverError::InvalidInput(
+                "Duplicate offsets are not allowed".to_string(),
+            ));
+        }
+        if diag.len() + offset.unsigned_abs() != n {
+            return Err(IterSolverError::DimensionError(format!(
+                "The {}th diagonal's length {} and its offset {} do not match",
+                index,
+                diag.len(),
+                offset
+            )));
+        }
+    }
+
+    let mut res = diagm(&diagonals[0], offsets[0]);
+
+    for (diag, offset) in diagonals.iter().zip(offsets.iter()) {
+        res += &diagm(diag, *offset);
+    }
+    Ok(res)
 }
 
 #[cfg(test)]

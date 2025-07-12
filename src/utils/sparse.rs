@@ -61,12 +61,12 @@ use sprs::CsMat;
 /// // [0.0, 0.0, 0.0, 3.0]
 /// // [0.0, 0.0, 0.0, 0.0]
 /// ```
-pub fn diagm_csr(data: &[f64], offset: i32) -> SparseCsrMatrix<f64> {
+pub fn diagm_csr(data: &[f64], offset: isize) -> SparseCsrMatrix<f64> {
     if data.is_empty() {
         return empty_spcsr();
     }
 
-    let offset_usize = offset.unsigned_abs() as usize;
+    let offset_usize = offset.unsigned_abs();
     let n = data.len() + offset_usize;
 
     let tmp = match offset {
@@ -325,12 +325,12 @@ pub fn symmetric_tridiagonal_csr(
 /// // [0.0, 0.0, 0.0, 3.0]
 /// // [0.0, 0.0, 0.0, 0.0]
 /// ```
-pub fn diagm_csc(data: &[f64], offset: i32) -> SparseCscMatrix<f64> {
+pub fn diagm_csc(data: &[f64], offset: isize) -> SparseCscMatrix<f64> {
     if data.is_empty() {
         return empty_spcsc();
     }
 
-    let offset_usize = offset.unsigned_abs() as usize;
+    let offset_usize = offset.unsigned_abs();
     let n = data.len() + offset_usize;
 
     let tmp = match offset {
@@ -543,6 +543,132 @@ pub fn symmetric_tridiagonal_csc(
     sub_diagonal: &[f64],
 ) -> IterSolverResult<SparseCscMatrix<f64>> {
     tridiagonal_csc(diagonal, sub_diagonal, sub_diagonal)
+}
+
+/// Creates a sparse csr diagonal matrix from a list of diagonals and their offsets.
+///
+/// # Arguments
+///
+/// * `diagonals` - A vector of vectors, where each inner vector contains the diagonal elements
+/// * `offsets` - A vector of offsets for each diagonal
+///
+/// # Examples
+///
+/// ```rust
+/// use iterative_solvers::utils::sparse::diags_csr;
+///
+/// let diagonals = vec![vec![1.0, 2.0, 3.0], vec![4.0, 5.0], vec![6.0]];
+/// let offsets = vec![0, 1, 2];
+///
+/// let result = diags_csr(diagonals, offsets);
+/// // Creates:
+/// // [1.0, 4.0, 6.0]
+/// // [0.0, 2.0, 5.0]
+/// // [0.0, 0.0, 3.0]
+/// ```
+pub fn diags_csr(
+    diagonals: Vec<Vec<f64>>,
+    offsets: Vec<isize>,
+) -> IterSolverResult<SparseCsrMatrix<f64>> {
+    if diagonals.len() != offsets.len() {
+        return Err(IterSolverError::DimensionError(format!(
+            "The length of `diagonals` {} and `offsets` {} do not match",
+            diagonals.len(),
+            offsets.len()
+        )));
+    }
+    if diagonals.is_empty() {
+        return Ok(empty_spcsr());
+    }
+
+    // Check for duplicate offsets
+    let n = diagonals[0].len() + offsets[0].unsigned_abs();
+    let mut unique_offsets = std::collections::HashSet::new();
+    for (index, (diag, offset)) in diagonals.iter().zip(offsets.iter()).enumerate() {
+        if !unique_offsets.insert(*offset) {
+            return Err(IterSolverError::InvalidInput(
+                "Duplicate offsets are not allowed".to_string(),
+            ));
+        }
+        if diag.len() + offset.unsigned_abs() != n {
+            return Err(IterSolverError::DimensionError(format!(
+                "The {}th diagonal's length {} and its offset {} do not match",
+                index,
+                diag.len(),
+                offset
+            )));
+        }
+    }
+
+    let mut res = diagm_csr(&diagonals[0], offsets[0]);
+
+    for (diag, offset) in diagonals.iter().zip(offsets.iter()) {
+        res = &res + &diagm_csr(diag, *offset);
+    }
+    Ok(res)
+}
+
+/// Creates a sparse csr diagonal matrix from a list of diagonals and their offsets.
+///
+/// # Arguments
+///
+/// * `diagonals` - A vector of vectors, where each inner vector contains the diagonal elements
+/// * `offsets` - A vector of offsets for each diagonal
+///
+/// # Examples
+///
+/// ```rust
+/// use iterative_solvers::utils::sparse::diags_csr;
+///
+/// let diagonals = vec![vec![1.0, 2.0, 3.0], vec![4.0, 5.0], vec![6.0]];
+/// let offsets = vec![0, 1, 2];
+///
+/// let result = diags_csr(diagonals, offsets);
+/// // Creates:
+/// // [1.0, 4.0, 6.0]
+/// // [0.0, 2.0, 5.0]
+/// // [0.0, 0.0, 3.0]
+/// ```
+pub fn diags_csc(
+    diagonals: Vec<Vec<f64>>,
+    offsets: Vec<isize>,
+) -> IterSolverResult<SparseCscMatrix<f64>> {
+    if diagonals.len() != offsets.len() {
+        return Err(IterSolverError::DimensionError(format!(
+            "The length of `diagonals` {} and `offsets` {} do not match",
+            diagonals.len(),
+            offsets.len()
+        )));
+    }
+    if diagonals.is_empty() {
+        return Ok(empty_spcsc());
+    }
+
+    // Check for duplicate offsets
+    let n = diagonals[0].len() + offsets[0].unsigned_abs();
+    let mut unique_offsets = std::collections::HashSet::new();
+    for (index, (diag, offset)) in diagonals.iter().zip(offsets.iter()).enumerate() {
+        if !unique_offsets.insert(*offset) {
+            return Err(IterSolverError::InvalidInput(
+                "Duplicate offsets are not allowed".to_string(),
+            ));
+        }
+        if diag.len() + offset.unsigned_abs() != n {
+            return Err(IterSolverError::DimensionError(format!(
+                "The {}th diagonal's length {} and its offset {} do not match",
+                index,
+                diag.len(),
+                offset
+            )));
+        }
+    }
+
+    let mut res = diagm_csc(&diagonals[0], offsets[0]);
+
+    for (diag, offset) in diagonals.iter().zip(offsets.iter()) {
+        res = &res + &diagm_csc(diag, *offset);
+    }
+    Ok(res)
 }
 
 #[cfg(test)]
