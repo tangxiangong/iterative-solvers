@@ -2,15 +2,24 @@
 
 use crate::{
     IterSolverError, IterSolverResult,
-    ops::{SparseCscMatrix, SparseCsrMatrix},
     utils::{empty_spcsc, empty_spcsr},
 };
+#[cfg(not(feature = "ndarray"))]
+use crate::{SparseCscMatrix, SparseCsrMatrix};
 
 #[cfg(feature = "nalgebra")]
 use nalgebra_sparse::CooMatrix;
 
 #[cfg(feature = "faer")]
 use faer::sparse::Triplet;
+
+#[cfg(feature = "ndarray")]
+type SparseCsrMatrix<T> = sprs::CsMat<T>;
+#[cfg(feature = "ndarray")]
+type SparseCscMatrix<T> = sprs::CsMat<T>;
+
+#[cfg(feature = "ndarray")]
+use sprs::CsMat;
 
 /// Creates a diagonal sparse CSR matrix with the given data placed on a specified diagonal.
 ///
@@ -78,6 +87,15 @@ pub fn diagm_csr(data: &[f64], offset: i32) -> SparseCsrMatrix<f64> {
                     .map(|(i, &val)| Triplet::new(i, i, val))
                     .collect::<Vec<_>>()
             }
+            #[cfg(feature = "ndarray")]
+            {
+                let indptr = (0..=data.len())
+                    .chain(std::iter::repeat_n(data.len(), n - data.len()))
+                    .collect::<Vec<_>>();
+                let indices = (0..data.len()).collect::<Vec<_>>();
+
+                (indptr, indices)
+            }
         }
         offset => {
             #[cfg(feature = "nalgebra")]
@@ -98,6 +116,16 @@ pub fn diagm_csr(data: &[f64], offset: i32) -> SparseCsrMatrix<f64> {
                         .map(|(i, &val)| Triplet::new(i, i + offset_usize, val))
                         .collect::<Vec<_>>()
                 }
+                #[cfg(feature = "ndarray")]
+                {
+                    // Each of the first `data.len()` rows has one element.
+                    let indptr = (0..=data.len())
+                        .chain(std::iter::repeat_n(data.len(), n - data.len()))
+                        .collect::<Vec<_>>();
+                    // The column indices are offset from the row indices.
+                    let indices = (offset_usize..offset_usize + data.len()).collect::<Vec<_>>();
+                    (indptr, indices)
+                }
             } else {
                 #[cfg(feature = "nalgebra")]
                 {
@@ -113,6 +141,20 @@ pub fn diagm_csr(data: &[f64], offset: i32) -> SparseCsrMatrix<f64> {
                         .map(|(i, &val)| Triplet::new(i + offset_usize, i, val))
                         .collect::<Vec<_>>()
                 }
+                #[cfg(feature = "ndarray")]
+                {
+                    // The first `offset_usize` rows are empty.
+                    let indptr = std::iter::repeat_n(0, offset_usize + 1)
+                        .chain(1..=data.len())
+                        .chain(std::iter::repeat_n(
+                            data.len(),
+                            n - (offset_usize + data.len()),
+                        ))
+                        .collect::<Vec<_>>();
+                    // The column indices start from 0.
+                    let indices = (0..data.len()).collect::<Vec<_>>();
+                    (indptr, indices)
+                }
             }
         }
     };
@@ -123,6 +165,10 @@ pub fn diagm_csr(data: &[f64], offset: i32) -> SparseCsrMatrix<f64> {
     #[cfg(feature = "faer")]
     {
         SparseCsrMatrix::try_new_from_triplets(n, n, &tmp).unwrap()
+    }
+    #[cfg(feature = "ndarray")]
+    {
+        CsMat::new((n, n), tmp.0, tmp.1, data.to_vec())
     }
 }
 
@@ -182,7 +228,14 @@ pub fn tridiagonal_csr(
             upper.len()
         )));
     }
-    Ok(diagm_csr(diagonal, 0) + diagm_csr(lower, -1) + diagm_csr(upper, 1))
+    #[cfg(not(feature = "ndarray"))]
+    {
+        Ok(diagm_csr(diagonal, 0) + diagm_csr(lower, -1) + diagm_csr(upper, 1))
+    }
+    #[cfg(feature = "ndarray")]
+    {
+        Ok(&(&diagm_csr(diagonal, 0) + &diagm_csr(lower, -1)) + &diagm_csr(upper, 1))
+    }
 }
 
 /// Creates a symmetric tridiagonal sparse CSR matrix from diagonal and sub-diagonal vectors.
@@ -298,6 +351,15 @@ pub fn diagm_csc(data: &[f64], offset: i32) -> SparseCscMatrix<f64> {
                     .map(|(i, &val)| Triplet::new(i, i, val))
                     .collect::<Vec<_>>()
             }
+            #[cfg(feature = "ndarray")]
+            {
+                let indptr = (0..=data.len())
+                    .chain(std::iter::repeat_n(data.len(), n - data.len()))
+                    .collect::<Vec<_>>();
+                let indices = (0..data.len()).collect::<Vec<_>>();
+
+                (indptr, indices)
+            }
         }
         offset => {
             if offset > 0 {
@@ -316,6 +378,18 @@ pub fn diagm_csc(data: &[f64], offset: i32) -> SparseCscMatrix<f64> {
                         .map(|(i, &val)| Triplet::new(i, i + offset_usize, val))
                         .collect::<Vec<_>>()
                 }
+                #[cfg(feature = "ndarray")]
+                {
+                    let indptr = std::iter::repeat_n(0, offset_usize + 1)
+                        .chain(1..=data.len())
+                        .chain(std::iter::repeat_n(
+                            data.len(),
+                            n - (offset_usize + data.len()),
+                        ))
+                        .collect::<Vec<_>>();
+                    let indices = (0..data.len()).collect::<Vec<_>>();
+                    (indptr, indices)
+                }
             } else {
                 #[cfg(feature = "nalgebra")]
                 {
@@ -332,6 +406,15 @@ pub fn diagm_csc(data: &[f64], offset: i32) -> SparseCscMatrix<f64> {
                         .map(|(i, &val)| Triplet::new(i + offset_usize, i, val))
                         .collect::<Vec<_>>()
                 }
+                #[cfg(feature = "ndarray")]
+                {
+                    let indptr = std::iter::repeat_n(0, 1)
+                        .chain(1..=data.len())
+                        .chain(std::iter::repeat_n(data.len(), n - data.len()))
+                        .collect::<Vec<_>>();
+                    let indices = (offset_usize..offset_usize + data.len()).collect::<Vec<_>>();
+                    (indptr, indices)
+                }
             }
         }
     };
@@ -342,6 +425,10 @@ pub fn diagm_csc(data: &[f64], offset: i32) -> SparseCscMatrix<f64> {
     #[cfg(feature = "faer")]
     {
         SparseCscMatrix::try_new_from_triplets(n, n, &tmp).unwrap()
+    }
+    #[cfg(feature = "ndarray")]
+    {
+        CsMat::new_csc((n, n), tmp.0, tmp.1, data.to_vec())
     }
 }
 
@@ -401,7 +488,14 @@ pub fn tridiagonal_csc(
             upper.len()
         )));
     }
-    Ok(diagm_csc(diagonal, 0) + diagm_csc(lower, -1) + diagm_csc(upper, 1))
+    #[cfg(not(feature = "ndarray"))]
+    {
+        Ok(diagm_csc(diagonal, 0) + diagm_csc(lower, -1) + diagm_csc(upper, 1))
+    }
+    #[cfg(feature = "ndarray")]
+    {
+        Ok(&(&diagm_csc(diagonal, 0) + &diagm_csc(lower, -1)) + &diagm_csc(upper, 1))
+    }
 }
 
 /// Creates a symmetric tridiagonal sparse CSC matrix from diagonal and sub-diagonal vectors.
@@ -521,7 +615,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "faer")]
+    #[cfg(any(feature = "faer", feature = "ndarray"))]
     fn test_diagm_csr_main_diagonal() {
         let data = vec![1.0, 2.0, 3.0];
         let mat = diagm_csr(&data, 0);
@@ -534,7 +628,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "faer")]
+    #[cfg(any(feature = "faer", feature = "ndarray"))]
     fn test_diagm_csr_upper_diagonal() {
         let data = vec![1.0, 2.0, 3.0];
         let mat = diagm_csr(&data, 1);
@@ -547,7 +641,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "faer")]
+    #[cfg(any(feature = "faer", feature = "ndarray"))]
     fn test_diagm_csr_lower_diagonal() {
         let data = vec![1.0, 2.0, 3.0];
         let mat = diagm_csr(&data, -1);
@@ -560,8 +654,10 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "faer")]
+    #[cfg(any(feature = "faer", feature = "ndarray"))]
     fn test_diagm_csr_empty() {
+        use crate::MatrixOp;
+
         let data: Vec<f64> = vec![];
         let mat = diagm_csr(&data, 0);
 
@@ -570,7 +666,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "faer")]
+    #[cfg(any(feature = "faer", feature = "ndarray"))]
     fn test_diagm_csr_large_offset() {
         let data = vec![1.0, 2.0];
         let mat = diagm_csr(&data, 10);

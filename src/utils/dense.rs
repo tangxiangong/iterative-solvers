@@ -45,14 +45,30 @@ use crate::{
 /// ```
 pub fn diagm(data: &[f64], offset: i32) -> Matrix<f64> {
     if data.is_empty() {
-        return Matrix::zeros(0, 0);
+        #[cfg(feature = "ndarray")]
+        {
+            return Matrix::zeros((0, 0));
+        }
+        #[cfg(not(feature = "ndarray"))]
+        {
+            return Matrix::zeros(0, 0);
+        }
     }
     match offset {
         0 => from_diagonal(data),
         offset => {
             let offset_usize = offset.unsigned_abs() as usize;
             let n = data.len() + offset_usize;
-            let mut mat = Matrix::zeros(n, n);
+            let mut mat = {
+                #[cfg(feature = "ndarray")]
+                {
+                    Matrix::zeros((n, n))
+                }
+                #[cfg(not(feature = "ndarray"))]
+                {
+                    Matrix::zeros(n, n)
+                }
+            };
 
             unsafe {
                 if offset > 0 {

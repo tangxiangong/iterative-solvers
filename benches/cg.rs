@@ -26,6 +26,9 @@ fn criterion_benchmark(c: &mut Criterion) {
     #[cfg(feature = "faer")]
     let rhs = faer::Mat::from_fn(rhs.len(), 1, |i, _| rhs[i]);
 
+    #[cfg(feature = "ndarray")]
+    let rhs = ndarray::Array1::from_vec(rhs);
+
     let abstol = 1e-10;
     let reltol = 1e-8;
 

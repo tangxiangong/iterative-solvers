@@ -61,3 +61,6 @@ pub mod utils;
 
 pub mod ops;
 pub use ops::*;
+
+#[cfg(feature = "ndarray")]
+extern crate blas_src;

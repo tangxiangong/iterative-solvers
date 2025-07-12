@@ -1,7 +1,11 @@
 #[cfg(feature = "faer")]
 use faer::{unzip, zip};
 
-use crate::{IterSolverError, IterSolverResult, Matrix, SparseCscMatrix, SparseCsrMatrix, Vector};
+use crate::{IterSolverError, IterSolverResult, Matrix, Vector};
+#[cfg(not(feature = "ndarray"))]
+use crate::{SparseCscMatrix, SparseCsrMatrix};
+#[cfg(feature = "ndarray")]
+use sprs::CsMat;
 
 /// Check if the matrix is a vector.
 pub(crate) fn is_vector(_mat: &Vector<f64>) -> bool {
@@ -12,6 +16,10 @@ pub(crate) fn is_vector(_mat: &Vector<f64>) -> bool {
     #[cfg(feature = "faer")]
     {
         _mat.ncols() == 1
+    }
+    #[cfg(feature = "ndarray")]
+    {
+        true
     }
 }
 
@@ -27,13 +35,20 @@ pub(crate) fn dot(lhs: &Vector<f64>, rhs: &Vector<f64>) -> IterSolverResult<f64>
             "The input parameter is not a vector".to_string(),
         ));
     }
+
+    #[cfg(not(feature = "ndarray"))]
     if lhs.nrows() != rhs.nrows() {
         return Err(IterSolverError::InvalidInput(
             "The input parameter is not a vector".to_string(),
         ));
     }
 
-    // 计算两个列向量的点积
+    #[cfg(feature = "ndarray")]
+    if lhs.len() != rhs.len() {
+        return Err(IterSolverError::InvalidInput(
+            "The input parameter is not a vector".to_string(),
+        ));
+    }
 
     #[cfg(feature = "faer")]
     {
@@ -47,6 +62,11 @@ pub(crate) fn dot(lhs: &Vector<f64>, rhs: &Vector<f64>) -> IterSolverResult<f64>
     {
         Ok(lhs.dot(rhs))
     }
+
+    #[cfg(feature = "ndarray")]
+    {
+        Ok(lhs.dot(rhs))
+    }
 }
 
 /// self = alpha * x + beta * self
@@ -57,12 +77,13 @@ pub(crate) fn axpy(v: &mut Vector<f64>, alpha: f64, x: &Vector<f64>, beta: f64) 
     }
     #[cfg(feature = "faer")]
     {
-        if beta != 1.0 {
-            *v *= beta;
-        }
-        if alpha != 0.0 {
-            *v += alpha * x;
-        }
+        *v *= beta;
+        *v += alpha * x;
+    }
+    #[cfg(feature = "ndarray")]
+    {
+        *v *= beta;
+        *v += &(alpha * x);
     }
 }
 
@@ -75,6 +96,10 @@ pub fn zeros(n: usize) -> Vector<f64> {
     {
         Vector::zeros(n, 1)
     }
+    #[cfg(feature = "ndarray")]
+    {
+        Vector::zeros(n)
+    }
 }
 
 pub fn norm_l2(mat: &Vector<f64>) -> f64 {
@@ -84,6 +109,12 @@ pub fn norm_l2(mat: &Vector<f64>) -> f64 {
     }
     #[cfg(feature = "faer")]
     {
+        mat.norm_l2()
+    }
+    #[cfg(feature = "ndarray")]
+    {
+        use ndarray_linalg::Norm;
+
         mat.norm_l2()
     }
 }
@@ -103,6 +134,12 @@ pub(crate) fn from_diagonal(data: &[f64]) -> Matrix<f64> {
     {
         Matrix::from_diagonal(&Vector::from_column_slice(data))
     }
+    #[cfg(feature = "ndarray")]
+    {
+        use ndarray::arr1;
+
+        Matrix::from_diag(&arr1(data))
+    }
 }
 
 /// # Safety
@@ -117,8 +154,13 @@ pub(crate) unsafe fn get_mut_unchecked<T>(mat: &mut Matrix<T>, row: usize, col: 
     {
         unsafe { mat.get_mut_unchecked(row, col) }
     }
+    #[cfg(feature = "ndarray")]
+    {
+        mat.get_mut((row, col)).unwrap()
+    }
 }
 
+#[cfg(not(feature = "ndarray"))]
 pub(crate) fn empty_spcsr() -> SparseCsrMatrix<f64> {
     #[cfg(feature = "nalgebra")]
     {
@@ -130,6 +172,7 @@ pub(crate) fn empty_spcsr() -> SparseCsrMatrix<f64> {
     }
 }
 
+#[cfg(not(feature = "ndarray"))]
 pub(crate) fn empty_spcsc() -> SparseCscMatrix<f64> {
     #[cfg(feature = "nalgebra")]
     {
@@ -139,4 +182,14 @@ pub(crate) fn empty_spcsc() -> SparseCscMatrix<f64> {
     {
         SparseCscMatrix::try_new_from_triplets(0, 0, &[]).unwrap()
     }
+}
+
+#[cfg(feature = "ndarray")]
+pub(crate) fn empty_spcsr() -> CsMat<f64> {
+    CsMat::empty(sprs::CompressedStorage::CSR, 0)
+}
+
+#[cfg(feature = "ndarray")]
+pub(crate) fn empty_spcsc() -> CsMat<f64> {
+    CsMat::empty(sprs::CompressedStorage::CSC, 0)
 }

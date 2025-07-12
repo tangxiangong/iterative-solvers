@@ -11,10 +11,12 @@
 use std::ops::Mul;
 
 use super::MatrixOp;
+#[cfg(not(feature = "ndarray"))]
+use crate::utils::is_vector;
 use crate::{
     IterSolverError, IterSolverResult,
     ops::Vector,
-    utils::{axpy, dot, is_vector, norm_l2, zeros},
+    utils::{axpy, dot, norm_l2, zeros},
 };
 
 /// Conjugate Gradient (CG) method for solving linear systems Ax = b.
@@ -176,6 +178,7 @@ impl<'mat, Mat: MatrixOp> CG<'mat, Mat> {
                 mat.ncols()
             )));
         }
+        #[cfg(feature = "faer")]
         if !is_vector(rhs) {
             return Err(IterSolverError::DimensionError(format!(
                 "The `rhs` should be a vector, but got a matrix with shape ({}, {}).",
@@ -306,6 +309,7 @@ impl<'mat, Mat: MatrixOp> CG<'mat, Mat> {
                 mat.ncols()
             )));
         }
+        #[cfg(not(feature = "ndarray"))]
         if !is_vector(rhs) {
             return Err(IterSolverError::DimensionError(format!(
                 "The `rhs` should be a vector, but got a matrix with shape ({}, {}).",
@@ -321,7 +325,7 @@ impl<'mat, Mat: MatrixOp> CG<'mat, Mat> {
                 rhs.len()
             )));
         }
-
+        #[cfg(not(feature = "ndarray"))]
         if !is_vector(&initial_guess) {
             return Err(IterSolverError::DimensionError(format!(
                 "The `initial_guess` should be a vector, but got a matrix with shape ({}, {}).",
@@ -663,6 +667,27 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "ndarray")]
+    fn test_cg_dense() {
+        use ndarray_linalg::Norm;
+
+        let n = 1024;
+        let h = 1.0 / 1024.0;
+        let a = vec![2.0 / (h * h); n - 1];
+        let b = vec![-1.0 / (h * h); n - 2];
+        let mat = symmetric_tridiagonal(&a, &b).unwrap();
+        let rhs: Vec<_> = (1..n)
+            .map(|i| PI * PI * (i as f64 * h * PI).sin())
+            .collect();
+        let solution: Vec<_> = (1..n).map(|i| (i as f64 * h * PI).sin()).collect();
+        let solution = Vector::from_vec(solution);
+        let rhs = Vector::from_vec(rhs);
+        let solver = cg(&mat, &rhs, 1e-10, 1e-8).unwrap();
+        let e = (solution - solver.solution()).norm_l2();
+        assert!(e < 1e-4);
+    }
+
+    #[test]
     #[cfg(feature = "nalgebra")]
     fn test_cg_sparse() {
         let n = 1024;
@@ -680,6 +705,7 @@ mod tests {
         let e = (solution - solver.solution()).norm();
         assert!(e < 1e-4);
     }
+
     #[test]
     #[cfg(feature = "faer")]
     fn test_cg_sparse() {
@@ -694,6 +720,27 @@ mod tests {
         let solution: Vec<_> = (1..n).map(|i| (i as f64 * h * PI).sin()).collect();
         let solution = Mat::from_fn(n - 1, 1, |i, _| solution[i]);
         let rhs = Mat::from_fn(n - 1, 1, |i, _| rhs[i]);
+        let solver = cg(&mat, &rhs, 1e-10, 1e-8).unwrap();
+        let e = (solution - solver.solution()).norm_l2();
+        assert!(e < 1e-4);
+    }
+
+    #[test]
+    #[cfg(feature = "ndarray")]
+    fn test_cg_sparse() {
+        use ndarray_linalg::Norm as _;
+
+        let n = 1024;
+        let h = 1.0 / 1024.0;
+        let a = vec![2.0 / (h * h); n - 1];
+        let b = vec![-1.0 / (h * h); n - 2];
+        let mat = symmetric_tridiagonal_csc(&a, &b).unwrap();
+        let rhs: Vec<_> = (1..n)
+            .map(|i| PI * PI * (i as f64 * h * PI).sin())
+            .collect();
+        let solution: Vec<_> = (1..n).map(|i| (i as f64 * h * PI).sin()).collect();
+        let solution = Vector::from_vec(solution);
+        let rhs = Vector::from_vec(rhs);
         let solver = cg(&mat, &rhs, 1e-10, 1e-8).unwrap();
         let e = (solution - solver.solution()).norm_l2();
         assert!(e < 1e-4);
