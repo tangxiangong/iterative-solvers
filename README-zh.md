@@ -18,6 +18,7 @@
 
 - [x] [nalgebra](https://github.com/dimforge/nalgebra) (默认)
 - [x] [faer](https://github.com/sarah-quinones/faer-rs)
+- [x] [ndarray](https://github.com/rust-ndarray/ndarray) (需要在系统上安装 OpenBLAS)
 
 您可以使用 Cargo 特性选择您喜欢的后端：
 

@@ -17,6 +17,7 @@ Rust implementations of iterative algorithms for solving linear systems.
 
 - [x] [nalgebra](https://github.com/dimforge/nalgebra) (default)
 - [x] [faer](https://github.com/sarah-quinones/faer-rs)
+- [x] [ndarray](https://github.com/rust-ndarray/ndarray) (need to install OpenBLAS on the system)
 
 You can choose your preferred backend using Cargo features:
 
