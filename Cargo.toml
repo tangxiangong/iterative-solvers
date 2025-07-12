@@ -2,14 +2,14 @@
 name = "iterative-solvers"
 authors = ["Xiangong Tang <tangxiangong@gmail.com>"]
 edition = "2024"
-version = "0.2.1"
+version = "0.2.2"
 license = "MIT OR Apache-2.0"
 description = "Iterative algorithms for solving linear systems"
 repository = "https://github.com/tangxiangong/iterative-solvers"
 readme = "README.md"
 categories = ["mathematics"]
 keywords = ["numerical-algorithm", "math", "cg"]
-exclude = ["julia-bench", "py-iterative-solvers"]
+exclude = ["julia-bench"]
 
 [features]
 default = ["nalgebra"]
