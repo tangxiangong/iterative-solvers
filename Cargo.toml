@@ -2,7 +2,7 @@
 name = "iterative-solvers"
 authors = ["Xiangong Tang <tangxiangong@gmail.com>"]
 edition = "2024"
-version = "0.2.2"
+version = "0.2.3"
 license = "MIT OR Apache-2.0"
 description = "Iterative algorithms for solving linear systems"
 repository = "https://github.com/tangxiangong/iterative-solvers"
