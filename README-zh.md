@@ -71,7 +71,7 @@ use std::f64::consts::PI;
 
 fn main() {
     let n = 1024;
-    let h = 1.0 / 1024.0;
+    let h = 1.0 / (n as f64);
     let a = vec![2.0 / (h * h); n - 1];
     let b = vec![-1.0 / (h * h); n - 2];
     // 使用 CSC 格式存储对称三对角矩阵
@@ -80,7 +80,7 @@ fn main() {
     let rhs: Vec<_> = (1..n)
         .map(|i| PI * PI * (i as f64 * h * PI).sin())
         .collect();
-    // 生成精确解
+    // 精确解
     let solution: Vec<_> = (1..n).map(|i| (i as f64 * h * PI).sin()).collect();
     let solution = DVector::from_vec(solution);
     let rhs = DVector::from_vec(rhs);

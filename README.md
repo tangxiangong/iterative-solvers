@@ -77,7 +77,7 @@ fn main() {
     let rhs: Vec<_> = (1..n)
         .map(|i| PI * PI * (i as f64 * h * PI).sin())
         .collect();
-    // Generate the exact solution
+    // The exact solution
     let solution: Vec<_> = (1..n).map(|i| (i as f64 * h * PI).sin()).collect();
     let solution = DVector::from_vec(solution);
     let rhs = DVector::from_vec(rhs);
