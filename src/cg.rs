@@ -46,12 +46,18 @@ use crate::{
 /// ```rust
 /// # #[cfg(feature = "nalgebra")]
 /// # {
-/// use nalgebra::{DMatrix, DVector};
+/// use nalgebra::DVector;
 /// use iterative_solvers::CG;
 ///
-/// // Create a simple 2x2 symmetric positive definite system
-/// let mat = DMatrix::from_row_slice(2, 2, &[4.0, 1.0, 1.0, 3.0]);
-/// let rhs = DVector::from_vec(vec![1.0, 2.0]);
+/// let n = 1024;
+/// let h = 1.0 / (n as f64);
+/// let a = vec![2.0 / (h * h); n - 1];
+/// let b = vec![-1.0 / (h * h); n - 2];
+/// let mat = symmetric_tridiagonal(&a, &b).unwrap();
+/// let rhs: Vec<_> = (1..n)
+///     .map(|i| PI * PI * (i as f64 * h * PI).sin())
+///     .collect();
+/// let rhs = DVector::from_vec(rhs);
 /// let abstol = 1e-10;
 /// let reltol = 1e-8;
 ///
@@ -70,9 +76,8 @@ use crate::{
 /// use iterative_solvers::utils::dense::symmetric_tridiagonal;
 /// use std::f64::consts::PI;
 ///
-/// // Create a simple symmetric positive definite system
 /// let n = 1024;
-/// let h = 1.0 / 1024.0;
+/// let h = 1.0 / (n as f64);
 /// let a = vec![2.0 / (h * h); n - 1];
 /// let b = vec![-1.0 / (h * h); n - 2];
 /// let mat = symmetric_tridiagonal(&a, &b).unwrap();
@@ -80,6 +85,33 @@ use crate::{
 ///     .map(|i| PI * PI * (i as f64 * h * PI).sin())
 ///     .collect();
 /// let rhs = Mat::from_fn(n - 1, 1, |i, _| rhs[i]);
+/// let abstol = 1e-10;
+/// let reltol = 1e-8;
+///
+/// let mut cg = CG::new(&mat, &rhs, abstol, reltol).unwrap();
+/// let solution = cg.solve();
+/// # }
+/// ```
+///
+/// **With ndarray feature:**
+///
+/// ```rust
+/// # #[cfg(feature = "ndarray")]
+/// # {
+/// use ndarray::arr1;
+/// use iterative_solvers::CG;
+/// use iterative_solvers::utils::dense::symmetric_tridiagonal;
+/// use std::f64::consts::PI;
+///
+/// let n = 1024;
+/// let h = 1.0 / (n as f64);
+/// let a = vec![2.0 / (h * h); n - 1];
+/// let b = vec![-1.0 / (h * h); n - 2];
+/// let mat = symmetric_tridiagonal(&a, &b).unwrap();
+/// let rhs: Vec<_> = (1..n)
+///     .map(|i| PI * PI * (i as f64 * h * PI).sin())
+///     .collect();
+/// let rhs = arr1(&rhs);
 /// let abstol = 1e-10;
 /// let reltol = 1e-8;
 ///
@@ -116,55 +148,6 @@ impl<'mat, Mat: MatrixOp> CG<'mat, Mat> {
     ///
     /// The stopping criterion is `|r_k| ≤ max(reltol * |r_0|, abstol)`,
     /// where `r_k ≈ A x_k - b` is the residual at the `k`th iteration, and `r_0 ≈ A x_0 - b` is the initial residual.
-    ///
-    /// # Examples
-    ///
-    /// **With nalgebra feature:**
-    ///
-    /// ```rust
-    /// # #[cfg(feature = "nalgebra")]
-    /// # {
-    /// use nalgebra::{DMatrix, DVector};
-    /// use iterative_solvers::CG;
-    ///
-    /// // Create a simple 2x2 symmetric positive definite system
-    /// let mat = DMatrix::from_row_slice(2, 2, &[4.0, 1.0, 1.0, 3.0]);
-    /// let rhs = DVector::from_vec(vec![1.0, 2.0]);
-    /// let abstol = 1e-10;
-    /// let reltol = 1e-8;
-    ///
-    /// let mut cg = CG::new(&mat, &rhs, abstol, reltol).unwrap();
-    /// let solution = cg.solve();
-    /// # }
-    /// ```
-    ///
-    /// **With faer feature:**
-    ///
-    /// ```rust
-    /// # #[cfg(feature = "faer")]
-    /// # {
-    /// use faer::Mat;
-    /// use iterative_solvers::CG;
-    /// use iterative_solvers::utils::dense::symmetric_tridiagonal;
-    /// use std::f64::consts::PI;
-    ///
-    /// // Create a simple symmetric positive definite system
-    /// let n = 1024;
-    /// let h = 1.0 / 1024.0;
-    /// let a = vec![2.0 / (h * h); n - 1];
-    /// let b = vec![-1.0 / (h * h); n - 2];
-    /// let mat = symmetric_tridiagonal(&a, &b).unwrap();
-    /// let rhs: Vec<_> = (1..n)
-    ///     .map(|i| PI * PI * (i as f64 * h * PI).sin())
-    ///     .collect();
-    /// let rhs = Mat::from_fn(n - 1, 1, |i, _| rhs[i]);
-    /// let abstol = 1e-10;
-    /// let reltol = 1e-8;
-    ///
-    /// let mut cg = CG::new(&mat, &rhs, abstol, reltol).unwrap();
-    /// let solution = cg.solve();
-    /// # }
-    /// ```
     pub fn new(
         mat: &'mat Mat,
         rhs: &'mat Vector<f64>,
@@ -241,57 +224,6 @@ impl<'mat, Mat: MatrixOp> CG<'mat, Mat> {
     /// # Initial Guess
     ///
     /// The initial guess is the starting point for the CG method. It is used to compute the initial residual.
-    ///
-    /// # Examples
-    ///
-    /// **With nalgebra feature:**
-    ///
-    /// ```rust
-    /// # #[cfg(feature = "nalgebra")]
-    /// # {
-    /// use nalgebra::{DMatrix, DVector};
-    /// use iterative_solvers::CG;
-    ///
-    /// // Create a simple 2x2 symmetric positive definite system
-    /// let mat = DMatrix::from_row_slice(2, 2, &[4.0, 1.0, 1.0, 3.0]);
-    /// let rhs = DVector::from_vec(vec![1.0, 2.0]);
-    /// let abstol = 1e-10;
-    /// let reltol = 1e-8;
-    /// let initial_guess = DVector::from_vec(vec![0.0, 0.0]);
-    ///
-    /// let mut cg = CG::new_with_initial_guess(&mat, &rhs, initial_guess, abstol, reltol).unwrap();
-    /// let solution = cg.solve();
-    /// # }
-    /// ```
-    ///
-    /// **With faer feature:**
-    ///
-    /// ```rust
-    /// # #[cfg(feature = "faer")]
-    /// # {
-    /// use faer::Mat;
-    /// use iterative_solvers::CG;
-    /// use iterative_solvers::utils::dense::symmetric_tridiagonal;
-    /// use std::f64::consts::PI;
-    ///
-    /// // Create a simple symmetric positive definite system
-    /// let n = 1024;
-    /// let h = 1.0 / 1024.0;
-    /// let a = vec![2.0 / (h * h); n - 1];
-    /// let b = vec![-1.0 / (h * h); n - 2];
-    /// let mat = symmetric_tridiagonal(&a, &b).unwrap();
-    /// let rhs: Vec<_> = (1..n)
-    ///     .map(|i| PI * PI * (i as f64 * h * PI).sin())
-    ///     .collect();
-    /// let rhs = Mat::from_fn(n - 1, 1, |i, _| rhs[i]);
-    /// let abstol = 1e-10;
-    /// let reltol = 1e-8;
-    /// let initial_guess = Mat::from_fn(n - 1, 1, |i, _| 0.0);
-    ///
-    /// let mut cg = CG::new_with_initial_guess(&mat, &rhs, initial_guess, abstol, reltol).unwrap();
-    /// let solution = cg.solve();
-    /// # }
-    /// ```
     pub fn new_with_initial_guess(
         mat: &'mat Mat,
         rhs: &'mat Vector<f64>,
@@ -477,12 +409,18 @@ impl<'mat, Mat: MatrixOp> Iterator for CG<'mat, Mat> {
 /// ```rust
 /// # #[cfg(feature = "nalgebra")]
 /// # {
-/// use nalgebra::{DMatrix, DVector};
+/// use nalgebra::DVector;
 /// use iterative_solvers::cg;
 ///
-/// // Create a simple 2x2 symmetric positive definite system
-/// let mat = DMatrix::from_row_slice(2, 2, &[4.0, 1.0, 1.0, 3.0]);
-/// let rhs = DVector::from_vec(vec![1.0, 2.0]);
+/// let n = 1024;
+/// let h = 1.0 / (n as f64);
+/// let a = vec![2.0 / (h * h); n - 1];
+/// let b = vec![-1.0 / (h * h); n - 2];
+/// let mat = symmetric_tridiagonal(&a, &b).unwrap();
+/// let rhs: Vec<_> = (1..n)
+///     .map(|i| PI * PI * (i as f64 * h * PI).sin())
+///     .collect();
+/// let rhs = DVector::from_vec(rhs);
 /// let abstol = 1e-10;
 /// let reltol = 1e-8;
 ///
@@ -500,9 +438,8 @@ impl<'mat, Mat: MatrixOp> Iterator for CG<'mat, Mat> {
 /// use iterative_solvers::utils::dense::symmetric_tridiagonal;
 /// use std::f64::consts::PI;
 ///
-/// // Create a simple 2x2 symmetric positive definite system
 /// let n = 1024;
-/// let h = 1.0 / 1024.0;
+/// let h = 1.0 / (n as f64);
 /// let a = vec![2.0 / (h * h); n - 1];
 /// let b = vec![-1.0 / (h * h); n - 2];
 /// let mat = symmetric_tridiagonal(&a, &b).unwrap();
@@ -512,6 +449,36 @@ impl<'mat, Mat: MatrixOp> Iterator for CG<'mat, Mat> {
 /// let rhs = Mat::from_fn(n - 1, 1, |i, _| rhs[i]);
 /// let solution: Vec<_> = (1..n).map(|i| (i as f64 * h * PI).sin()).collect();
 /// let solution = Mat::from_fn(n - 1, 1, |i, _| solution[i]);
+/// let abstol = 1e-10;
+/// let reltol = 1e-8;
+///
+/// let solver = cg(&mat, &rhs, abstol, reltol).unwrap();
+/// let e = (solution - solver.solution()).norm_l2();
+/// println!("error: {}", e);
+/// # }
+/// ```
+///
+/// **With ndarray feature:**
+///
+/// ```rust
+/// # #[cfg(feature = "ndarray")]
+/// # {
+/// use ndarray::arr1;
+/// use iterative_solvers::cg;
+/// use iterative_solvers::utils::dense::symmetric_tridiagonal;
+/// use std::f64::consts::PI;
+///
+/// let n = 1024;
+/// let h = 1.0 / (n as f64);
+/// let a = vec![2.0 / (h * h); n - 1];
+/// let b = vec![-1.0 / (h * h); n - 2];
+/// let mat = symmetric_tridiagonal(&a, &b).unwrap();
+/// let rhs: Vec<_> = (1..n)
+///     .map(|i| PI * PI * (i as f64 * h * PI).sin())
+///     .collect();
+/// let rhs = arr1(&rhs);
+/// let solution: Vec<_> = (1..n).map(|i| (i as f64 * h * PI).sin()).collect();
+/// let solution = arr1(&solution);
 /// let abstol = 1e-10;
 /// let reltol = 1e-8;
 ///
@@ -559,15 +526,21 @@ pub fn cg<'mat, Mat: MatrixOp>(
 /// ```rust
 /// # #[cfg(feature = "nalgebra")]
 /// # {
-/// use nalgebra::{DMatrix, DVector};
+/// use nalgebra::DVector;
 /// use iterative_solvers::cg_with_initial_guess;
 ///
-/// // Create a simple 2x2 symmetric positive definite system
-/// let mat = DMatrix::from_row_slice(2, 2, &[4.0, 1.0, 1.0, 3.0]);
-/// let rhs = DVector::from_vec(vec![1.0, 2.0]);
+/// let n = 1024;
+/// let h = 1.0 / (n as f64);
+/// let a = vec![2.0 / (h * h); n - 1];
+/// let b = vec![-1.0 / (h * h); n - 2];
+/// let mat = symmetric_tridiagonal(&a, &b).unwrap();
+/// let rhs: Vec<_> = (1..n)
+///     .map(|i| PI * PI * (i as f64 * h * PI).sin())
+///     .collect();
+/// let rhs = DVector::from_vec(rhs);
 /// let abstol = 1e-10;
 /// let reltol = 1e-8;
-/// let initial_guess = DVector::from_vec(vec![0.0, 0.0]);
+/// let initial_guess = DVector::from_vec(vec![1.0; n-1]);
 ///
 /// let solution = cg_with_initial_guess(&mat, &rhs, initial_guess, abstol, reltol).unwrap();
 /// # }
@@ -583,9 +556,8 @@ pub fn cg<'mat, Mat: MatrixOp>(
 /// use iterative_solvers::utils::dense::symmetric_tridiagonal;
 /// use std::f64::consts::PI;
 ///
-/// // Create a simple 2x2 symmetric positive definite system
 /// let n = 1024;
-/// let h = 1.0 / 1024.0;
+/// let h = 1.0 / (n as f64);
 /// let a = vec![2.0 / (h * h); n - 1];
 /// let b = vec![-1.0 / (h * h); n - 2];
 /// let mat = symmetric_tridiagonal(&a, &b).unwrap();
@@ -597,7 +569,38 @@ pub fn cg<'mat, Mat: MatrixOp>(
 /// let solution = Mat::from_fn(n - 1, 1, |i, _| solution[i]);
 /// let abstol = 1e-10;
 /// let reltol = 1e-8;
-/// let initial_guess = Mat::from_fn(n - 1, 1, |i, _| 0.0);
+/// let initial_guess = Mat::from_fn(n - 1, 1, |i, _| 1.0);
+///
+/// let solver = cg_with_initial_guess(&mat, &rhs, initial_guess, abstol, reltol).unwrap();
+/// let e = (solution - solver.solution()).norm_l2();
+/// println!("error: {}", e);
+/// # }
+/// ```
+///
+/// **With ndarray feature:**
+///
+/// ```rust
+/// # #[cfg(feature = "ndarray")]
+/// # {
+/// use ndarray::arr1;
+/// use iterative_solvers::cg_with_initial_guess;
+/// use iterative_solvers::utils::dense::symmetric_tridiagonal;
+/// use std::f64::consts::PI;
+///
+/// let n = 1024;
+/// let h = 1.0 / (n as f64);
+/// let a = vec![2.0 / (h * h); n - 1];
+/// let b = vec![-1.0 / (h * h); n - 2];
+/// let mat = symmetric_tridiagonal(&a, &b).unwrap();
+/// let rhs: Vec<_> = (1..n)
+///     .map(|i| PI * PI * (i as f64 * h * PI).sin())
+///     .collect();
+/// let rhs = arr1(&rhs);
+/// let solution: Vec<_> = (1..n).map(|i| (i as f64 * h * PI).sin()).collect();
+/// let solution = arr1(&solution);
+/// let abstol = 1e-10;
+/// let reltol = 1e-8;
+/// let initial_guess = arr1(&vec![1.0; n-1]);
 ///
 /// let solver = cg_with_initial_guess(&mat, &rhs, initial_guess, abstol, reltol).unwrap();
 /// let e = (solution - solver.solution()).norm_l2();
@@ -625,14 +628,12 @@ mod tests {
 
     use super::*;
     use crate::utils::{dense::symmetric_tridiagonal, sparse::symmetric_tridiagonal_csc};
-    #[cfg(feature = "faer")]
-    use faer::Mat;
 
     #[test]
     #[cfg(feature = "nalgebra")]
     fn test_cg_dense() {
         let n = 1024;
-        let h = 1.0 / 1024.0;
+        let h = 1.0 / (n as f64);
         let a = vec![2.0 / (h * h); n - 1];
         let b = vec![-1.0 / (h * h); n - 2];
         let mat = symmetric_tridiagonal(&a, &b).unwrap();
@@ -651,7 +652,7 @@ mod tests {
     #[cfg(feature = "faer")]
     fn test_cg_dense() {
         let n = 1024;
-        let h = 1.0 / 1024.0;
+        let h = 1.0 / (n as f64);
         let a = vec![2.0 / (h * h); n - 1];
         let b = vec![-1.0 / (h * h); n - 2];
         let mat = symmetric_tridiagonal(&a, &b).unwrap();
@@ -659,8 +660,8 @@ mod tests {
             .map(|i| PI * PI * (i as f64 * h * PI).sin())
             .collect();
         let solution: Vec<_> = (1..n).map(|i| (i as f64 * h * PI).sin()).collect();
-        let solution = Mat::from_fn(n - 1, 1, |i, _| solution[i]);
-        let rhs = Mat::from_fn(n - 1, 1, |i, _| rhs[i]);
+        let solution = faer::Mat::from_fn(n - 1, 1, |i, _| solution[i]);
+        let rhs = faer::Mat::from_fn(n - 1, 1, |i, _| rhs[i]);
         let solver = cg(&mat, &rhs, 1e-10, 1e-8).unwrap();
         let e = (solution - solver.solution()).norm_l2();
         assert!(e < 1e-4);
@@ -669,10 +670,11 @@ mod tests {
     #[test]
     #[cfg(feature = "ndarray")]
     fn test_cg_dense() {
+        use ndarray::arr1;
         use ndarray_linalg::Norm;
 
         let n = 1024;
-        let h = 1.0 / 1024.0;
+        let h = 1.0 / (n as f64);
         let a = vec![2.0 / (h * h); n - 1];
         let b = vec![-1.0 / (h * h); n - 2];
         let mat = symmetric_tridiagonal(&a, &b).unwrap();
@@ -680,8 +682,8 @@ mod tests {
             .map(|i| PI * PI * (i as f64 * h * PI).sin())
             .collect();
         let solution: Vec<_> = (1..n).map(|i| (i as f64 * h * PI).sin()).collect();
-        let solution = Vector::from_vec(solution);
-        let rhs = Vector::from_vec(rhs);
+        let solution = arr1(&solution);
+        let rhs = arr1(&rhs);
         let solver = cg(&mat, &rhs, 1e-10, 1e-8).unwrap();
         let e = (solution - solver.solution()).norm_l2();
         assert!(e < 1e-4);
@@ -691,7 +693,7 @@ mod tests {
     #[cfg(feature = "nalgebra")]
     fn test_cg_sparse() {
         let n = 1024;
-        let h = 1.0 / 1024.0;
+        let h = 1.0 / (n as f64);
         let a = vec![2.0 / (h * h); n - 1];
         let b = vec![-1.0 / (h * h); n - 2];
         let mat = symmetric_tridiagonal_csc(&a, &b).unwrap();
@@ -710,7 +712,7 @@ mod tests {
     #[cfg(feature = "faer")]
     fn test_cg_sparse() {
         let n = 1024;
-        let h = 1.0 / 1024.0;
+        let h = 1.0 / (n as f64);
         let a = vec![2.0 / (h * h); n - 1];
         let b = vec![-1.0 / (h * h); n - 2];
         let mat = symmetric_tridiagonal_csc(&a, &b).unwrap();
@@ -718,8 +720,8 @@ mod tests {
             .map(|i| PI * PI * (i as f64 * h * PI).sin())
             .collect();
         let solution: Vec<_> = (1..n).map(|i| (i as f64 * h * PI).sin()).collect();
-        let solution = Mat::from_fn(n - 1, 1, |i, _| solution[i]);
-        let rhs = Mat::from_fn(n - 1, 1, |i, _| rhs[i]);
+        let solution = faer::Mat::from_fn(n - 1, 1, |i, _| solution[i]);
+        let rhs = faer::Mat::from_fn(n - 1, 1, |i, _| rhs[i]);
         let solver = cg(&mat, &rhs, 1e-10, 1e-8).unwrap();
         let e = (solution - solver.solution()).norm_l2();
         assert!(e < 1e-4);
@@ -728,10 +730,11 @@ mod tests {
     #[test]
     #[cfg(feature = "ndarray")]
     fn test_cg_sparse() {
-        use ndarray_linalg::Norm as _;
+        use ndarray::arr1;
+        use ndarray_linalg::Norm;
 
         let n = 1024;
-        let h = 1.0 / 1024.0;
+        let h = 1.0 / (n as f64);
         let a = vec![2.0 / (h * h); n - 1];
         let b = vec![-1.0 / (h * h); n - 2];
         let mat = symmetric_tridiagonal_csc(&a, &b).unwrap();
@@ -739,8 +742,8 @@ mod tests {
             .map(|i| PI * PI * (i as f64 * h * PI).sin())
             .collect();
         let solution: Vec<_> = (1..n).map(|i| (i as f64 * h * PI).sin()).collect();
-        let solution = Vector::from_vec(solution);
-        let rhs = Vector::from_vec(rhs);
+        let solution = arr1(&solution);
+        let rhs = arr1(&rhs);
         let solver = cg(&mat, &rhs, 1e-10, 1e-8).unwrap();
         let e = (solution - solver.solution()).norm_l2();
         assert!(e < 1e-4);

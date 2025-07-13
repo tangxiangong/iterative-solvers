@@ -157,17 +157,6 @@ impl MatrixOp for SparseCsrMatrix<f64> {
         }
     }
 
-    fn is_empty(&self) -> bool {
-        #[cfg(feature = "nalgebra")]
-        {
-            self.nrows() == 0 || self.ncols() == 0
-        }
-        #[cfg(feature = "faer")]
-        {
-            <Self as LinOp<f64>>::nrows(self) == 0 || <Self as LinOp<f64>>::ncols(self) == 0
-        }
-    }
-
     fn is_square(&self) -> bool {
         #[cfg(feature = "nalgebra")]
         {
@@ -198,6 +187,17 @@ impl MatrixOp for SparseCsrMatrix<f64> {
             );
         }
     }
+
+    fn is_empty(&self) -> bool {
+        #[cfg(feature = "nalgebra")]
+        {
+            self.nrows() == 0 || self.ncols() == 0
+        }
+        #[cfg(feature = "faer")]
+        {
+            <Self as LinOp<f64>>::nrows(self) == 0 || <Self as LinOp<f64>>::ncols(self) == 0
+        }
+    }
 }
 
 #[cfg(not(feature = "ndarray"))]
@@ -221,17 +221,6 @@ impl MatrixOp for SparseCscMatrix<f64> {
         #[cfg(feature = "faer")]
         {
             <Self as LinOp<f64>>::ncols(self)
-        }
-    }
-
-    fn is_empty(&self) -> bool {
-        #[cfg(feature = "nalgebra")]
-        {
-            self.nrows() == 0 || self.ncols() == 0
-        }
-        #[cfg(feature = "faer")]
-        {
-            <Self as LinOp<f64>>::nrows(self) == 0 || <Self as LinOp<f64>>::ncols(self) == 0
         }
     }
 
@@ -262,6 +251,17 @@ impl MatrixOp for SparseCscMatrix<f64> {
                 alpha,
                 faer::Par::Seq,
             );
+        }
+    }
+
+    fn is_empty(&self) -> bool {
+        #[cfg(feature = "nalgebra")]
+        {
+            self.nrows() == 0 || self.ncols() == 0
+        }
+        #[cfg(feature = "faer")]
+        {
+            <Self as LinOp<f64>>::nrows(self) == 0 || <Self as LinOp<f64>>::ncols(self) == 0
         }
     }
 }
