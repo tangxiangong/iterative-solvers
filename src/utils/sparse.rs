@@ -675,8 +675,9 @@ pub fn diags_csc(
 mod tests {
     use super::super::dense::diagm;
     use super::*;
+
     #[cfg(feature = "nalgebra")]
-    use nalgebra::DMatrix;
+    use nalgebra_sparse::convert::serial::convert_csr_dense;
 
     #[test]
     #[cfg(feature = "nalgebra")]
@@ -685,7 +686,7 @@ mod tests {
         let mat = diagm_csr(&data, 0);
 
         // 转换为稠密矩阵进行验证
-        let dense = DMatrix::from(&mat);
+        let dense = convert_csr_dense(&mat);
         let expected = diagm(&data, 0);
 
         assert_eq!(dense, expected);
@@ -698,7 +699,7 @@ mod tests {
         let mat = diagm_csr(&data, 1);
 
         // 转换为稠密矩阵进行验证
-        let dense = DMatrix::from(&mat);
+        let dense = convert_csr_dense(&mat);
         let expected = diagm(&data, 1);
 
         assert_eq!(dense, expected);
@@ -711,7 +712,7 @@ mod tests {
         let mat = diagm_csr(&data, -1);
 
         // 转换为稠密矩阵进行验证
-        let dense = DMatrix::from(&mat);
+        let dense = convert_csr_dense(&mat);
         let expected = diagm(&data, -1);
 
         assert_eq!(dense, expected);
@@ -734,7 +735,7 @@ mod tests {
         let mat = diagm_csr(&data, 10);
 
         // 转换为稠密矩阵进行验证
-        let dense = DMatrix::from(&mat);
+        let dense = convert_csr_dense(&mat);
         let expected = diagm(&data, 10);
 
         assert_eq!(dense, expected);

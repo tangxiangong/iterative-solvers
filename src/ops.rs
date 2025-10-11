@@ -2,13 +2,7 @@
 use nalgebra::{DMatrix, DVector};
 
 #[cfg(feature = "nalgebra")]
-use nalgebra_sparse::{
-    CscMatrix, CsrMatrix,
-    ops::{
-        Op,
-        serial::{spmm_csc_dense, spmm_csr_dense},
-    },
-};
+use nalgebra_sparse::{CscMatrix, CsrMatrix};
 
 #[cfg(feature = "faer")]
 use faer::{
@@ -171,7 +165,15 @@ impl MatrixOp for SparseCsrMatrix<f64> {
     fn gemv(&self, alpha: f64, x: &Vector<f64>, beta: f64, y: &mut Vector<f64>) {
         #[cfg(feature = "nalgebra")]
         {
-            spmm_csr_dense(beta, y, alpha, Op::NoOp(self), Op::NoOp(x))
+            // y = beta * y + alpha * A * x
+            *y *= beta;
+            for (row_idx, row) in self.row_iter().enumerate() {
+                let mut sum = 0.0;
+                for (col_idx, &val) in row.col_indices().iter().zip(row.values().iter()) {
+                    sum += val * x[*col_idx];
+                }
+                y[row_idx] += alpha * sum;
+            }
         }
         #[cfg(feature = "faer")]
         {
@@ -238,7 +240,14 @@ impl MatrixOp for SparseCscMatrix<f64> {
     fn gemv(&self, alpha: f64, x: &Vector<f64>, beta: f64, y: &mut Vector<f64>) {
         #[cfg(feature = "nalgebra")]
         {
-            spmm_csc_dense(beta, y, alpha, Op::NoOp(self), Op::NoOp(x))
+            // y = beta * y + alpha * A * x
+            *y *= beta;
+            for (col_idx, col) in self.col_iter().enumerate() {
+                let x_val = x[col_idx];
+                for (row_idx, &val) in col.row_indices().iter().zip(col.values().iter()) {
+                    y[*row_idx] += alpha * val * x_val;
+                }
+            }
         }
         #[cfg(feature = "faer")]
         {

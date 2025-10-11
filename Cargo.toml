@@ -11,38 +11,6 @@ categories = ["mathematics"]
 keywords = ["numerical-algorithm", "math", "cg"]
 exclude = ["julia-bench"]
 
-[features]
-default = ["nalgebra"]
-nalgebra = ["dep:nalgebra", "dep:nalgebra-sparse"]
-faer = ["dep:faer"]
-ndarray = [
-    "dep:ndarray",
-    "dep:sprs",
-    "dep:ndarray-linalg",
-    "dep:blas-src",
-    "dep:openblas-src",
-]
-
-
-[dependencies]
-thiserror = "2"
-# nalgebra backend, default
-nalgebra = { version = "0.33", optional = true }
-nalgebra-sparse = { version = "0.10", optional = true }
-# faer backend
-faer = { version = "0.22", optional = true }
-ndarray-linalg = { version = "0.17", optional = true }
-# ndarray backend
-ndarray = { version = "0.16", features = [
-    "matrixmultiply-threading",
-], optional = true }
-blas-src = { version = "0.11", features = ["openblas"], optional = true }
-openblas-src = { version = "0.10", features = [
-    "cblas",
-    "system",
-], optional = true }
-sprs = { version = "0.11", optional = true }
-
 # docs.rs 配置
 [package.metadata.docs.rs]
 features = ["nalgebra"]
@@ -52,18 +20,53 @@ rustdoc-args = ["--cfg", "docsrs"]
 name = "iterative_solvers"
 doctest = false
 
+[features]
+default = ["nalgebra"]
+faer = ["dep:faer"]
+nalgebra = ["dep:nalgebra", "dep:nalgebra-sparse"]
+ndarray = [
+    "dep:ndarray",
+    "dep:sprs",
+    "dep:ndarray-linalg",
+    "dep:blas-src",
+    "dep:openblas-src",
+]
+
+[dependencies]
+thiserror = "2"
+
+# faer backend
+faer = { version = "0.23", optional = true }
+
+# nalgebra backend, default
+nalgebra = { version = "0.34", optional = true }
+nalgebra-sparse = { version = "0.11", optional = true }
+
+# ndarray backend
+blas-src = { version = "0.14", features = ["openblas"], optional = true }
+ndarray = { version = "0.16", features = [
+    "matrixmultiply-threading",
+], optional = true }
+ndarray-linalg = { version = "0.17", optional = true }
+openblas-src = { version = "0.10", features = [
+    "cblas",
+    "system",
+], optional = true }
+sprs = { version = "0.11", optional = true }
+
+
+[dev-dependencies]
+criterion = "0.7.0"
+faer = "0.23"
+nalgebra = "0.34"
+nalgebra-sparse = "0.11"
+ndarray = "0.16"
+sprs = "0.11"
+
 [profile.release]
 lto = true
 codegen-units = 1
 panic = "abort"
-
-[dev-dependencies]
-criterion = "0.6.0"
-nalgebra = "0.33"
-nalgebra-sparse = "0.10"
-faer = "0.22"
-ndarray = "0.16"
-sprs = "0.11"
 
 [[bench]]
 name = "diagm"
