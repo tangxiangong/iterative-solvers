@@ -21,7 +21,7 @@ name = "iterative_solvers"
 doctest = false
 
 [features]
-default = ["nalgebra"]
+default = ["faer"]
 faer = ["dep:faer"]
 nalgebra = ["dep:nalgebra", "dep:nalgebra-sparse"]
 ndarray = [
@@ -36,7 +36,7 @@ ndarray = [
 thiserror = "2"
 
 # faer backend
-faer = { version = "0.23", optional = true }
+faer = { version = "0.23", optional = true, features = ["perf-warn"] }
 
 # nalgebra backend, default
 nalgebra = { version = "0.34", optional = true }
@@ -44,10 +44,10 @@ nalgebra-sparse = { version = "0.11", optional = true }
 
 # ndarray backend
 blas-src = { version = "0.14", features = ["openblas"], optional = true }
-ndarray = { version = "0.16", features = [
+ndarray = { version = "0.17", features = [
     "matrixmultiply-threading",
 ], optional = true }
-ndarray-linalg = { version = "0.17", optional = true }
+ndarray-linalg = { version = "0.18", optional = true }
 openblas-src = { version = "0.10", features = [
     "cblas",
     "system",
@@ -60,7 +60,7 @@ criterion = "0.7.0"
 faer = "0.23"
 nalgebra = "0.34"
 nalgebra-sparse = "0.11"
-ndarray = "0.16"
+ndarray = "0.17"
 sprs = "0.11"
 
 [profile.release]
